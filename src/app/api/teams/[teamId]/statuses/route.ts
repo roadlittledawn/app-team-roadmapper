@@ -24,10 +24,30 @@ export async function GET(
   let statuses = await ProjectStatus.find({ teamId }).sort({ order: 1 }).lean();
 
   if (statuses.length === 0) {
-    const created = await ProjectStatus.insertMany(
-      DEFAULT_STATUSES.map((s, i) => ({ ...s, order: i, teamId }))
+    await Promise.all(
+      DEFAULT_STATUSES.map((s, i) =>
+        ProjectStatus.findOneAndUpdate(
+          { teamId, label: s.label },
+          { $setOnInsert: { color: s.color, order: i } },
+          { upsert: true }
+        )
+      )
     );
-    statuses = created.map((s) => s.toObject());
+    statuses = await ProjectStatus.find({ teamId }).sort({ order: 1 }).lean();
+  } else {
+    const seen = new Set<string>();
+    const dupeIds: string[] = [];
+    for (const s of statuses) {
+      if (seen.has(s.label)) {
+        dupeIds.push(s._id.toString());
+      } else {
+        seen.add(s.label);
+      }
+    }
+    if (dupeIds.length > 0) {
+      await ProjectStatus.deleteMany({ _id: { $in: dupeIds } });
+      statuses = statuses.filter((s) => !dupeIds.includes(s._id.toString()));
+    }
   }
 
   return NextResponse.json({ statuses });
