@@ -1,0 +1,25 @@
+# ============================================================================
+# SDD PROJECT SETTINGS - DO NOT EDIT MANUALLY
+# ============================================================================
+# This file is generated and maintained by SDD commands.
+# To modify settings, use: /sdd with natural language about settings
+# ============================================================================
+
+sdd:
+  initialized_by_plugin_version: "7.3.0"
+  updated_by_plugin_version: "7.3.0"
+  initialized_at: "2026-06-02T00:00:00Z"
+  updated_at: "2026-06-02T00:00:00Z"
+
+project:
+  name: "app-team-roadmapper"
+
+techpacks:
+  fs-ts:
+    name: fullstack-typescript
+    namespace: fs-ts
+    version: "1.0.0"
+    mode: internal
+    path: fullstack-typescript
+
+components: {}

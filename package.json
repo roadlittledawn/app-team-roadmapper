@@ -1,0 +1,6 @@
+{
+  "name": "app-team-roadmapper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CRUD app for creating and tracking team roadmaps and capacity planning"
+}
