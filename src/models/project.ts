@@ -5,6 +5,7 @@ export interface IProject extends Document {
   description: string;
   size: string | null;
   pointEstimate: number | null;
+  color: string;
   statusId: mongoose.Types.ObjectId;
   plannedStart: Date;
   plannedEnd: Date;
@@ -17,12 +18,19 @@ export interface IProject extends Document {
   updatedAt: Date;
 }
 
+export const PROJECT_PALETTE = [
+  "#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981",
+  "#ec4899", "#f97316", "#14b8a6", "#6366f1", "#84cc16",
+  "#e11d48", "#0ea5e9", "#a855f7", "#eab308", "#22d3ee",
+];
+
 const ProjectSchema = new Schema<IProject>(
   {
     title: { type: String, required: true },
     description: { type: String, default: "" },
     size: { type: String, default: null },
     pointEstimate: { type: Number, default: null },
+    color: { type: String, default: "#3b82f6" },
     statusId: { type: Schema.Types.ObjectId, ref: "ProjectStatus", required: true },
     plannedStart: { type: Date, required: true },
     plannedEnd: { type: Date, required: true },

@@ -10,6 +10,8 @@ async function verifyTeamOwnership(teamId: string, userId: string) {
   return !!team;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ teamId: string; roadmapId: string }> }

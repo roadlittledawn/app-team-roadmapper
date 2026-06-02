@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { GanttChart } from "@/components/gantt-chart";
 import { CapacityOverview } from "@/components/capacity-overview";
+import { ArrowLeft, Maximize2, Minimize2, Pencil, Plus } from "lucide-react";
+
+const PROJECT_PALETTE = [
+  "#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981",
+  "#ec4899", "#f97316", "#14b8a6", "#6366f1", "#84cc16",
+  "#e11d48", "#0ea5e9", "#a855f7", "#eab308", "#22d3ee",
+];
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -33,6 +40,7 @@ interface Project {
   description: string;
   size: string | null;
   pointEstimate: number | null;
+  color: string;
   plannedStart: string;
   plannedEnd: string;
   statusId: string;
@@ -95,10 +103,10 @@ export default function RoadmapDetailPage() {
 
   async function fetchAll() {
     const [rmRes, statusRes, sizingRes, membersRes] = await Promise.all([
-      fetch(`/api/teams/${teamId}/roadmaps/${roadmapId}`),
-      fetch(`/api/teams/${teamId}/statuses`),
-      fetch(`/api/teams/${teamId}/sizing-config`),
-      fetch(`/api/teams/${teamId}/members`),
+      fetch(`/api/teams/${teamId}/roadmaps/${roadmapId}`, { cache: "no-store" }),
+      fetch(`/api/teams/${teamId}/statuses`, { cache: "no-store" }),
+      fetch(`/api/teams/${teamId}/sizing-config`, { cache: "no-store" }),
+      fetch(`/api/teams/${teamId}/members`, { cache: "no-store" }),
     ]);
 
     if (rmRes.ok) {
@@ -230,7 +238,7 @@ export default function RoadmapDetailPage() {
       title: p.title,
       plannedStart: p.plannedStart,
       plannedEnd: p.plannedEnd,
-      statusColor: status.color,
+      statusColor: p.color || status.color,
       statusLabel: status.label,
     };
   });
@@ -254,7 +262,7 @@ export default function RoadmapDetailPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" onClick={() => router.push(`/teams/${teamId}`)}>
-            &larr; Back
+            <ArrowLeft /> Back
           </Button>
           <div className="flex-1 flex items-center justify-between">
             <div>
@@ -269,8 +277,8 @@ export default function RoadmapDetailPage() {
                 )}
               </p>
             </div>
-            <Button variant="ghost" size="sm" onClick={startEditingRoadmap}>
-              Edit
+            <Button variant="ghost-accent" size="sm" onClick={startEditingRoadmap}>
+              <Pencil /> Edit
             </Button>
           </div>
         </div>
@@ -353,8 +361,8 @@ export default function RoadmapDetailPage() {
           <div>
             <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
               <h2 className="text-lg font-semibold">Timeline</h2>
-              <Button variant="ghost" size="sm" onClick={() => setGanttFullscreen(true)}>
-                Fullscreen
+              <Button variant="ghost-accent" size="sm" onClick={() => setGanttFullscreen(true)}>
+                <Maximize2 /> Fullscreen
               </Button>
             </div>
             <GanttChart
@@ -379,7 +387,7 @@ export default function RoadmapDetailPage() {
             <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
               <h2 className="text-lg font-semibold">Projects ({projects.length})</h2>
               {!showProjectForm && (
-                <Button onClick={() => setShowProjectForm(true)}>Add Project</Button>
+                <Button onClick={() => setShowProjectForm(true)}><Plus /> Add Project</Button>
               )}
             </div>
 
@@ -545,8 +553,8 @@ export default function RoadmapDetailPage() {
                       >
                         <div className="flex items-center gap-3">
                           <span
-                            className="w-3 h-3 rounded-full shrink-0"
-                            style={{ backgroundColor: status.color }}
+                            className="w-3 h-3 rounded-sm shrink-0"
+                            style={{ backgroundColor: project.color || status.color }}
                           />
                           <div>
                             <span className="font-medium">{project.title}</span>
@@ -619,6 +627,7 @@ function ProjectDetail({
   const [statusId, setStatusId] = useState(project.statusId);
   const [size, setSize] = useState(project.size || "");
   const [points, setPoints] = useState(project.pointEstimate?.toString() || "");
+  const [color, setColor] = useState(project.color || "#3b82f6");
   const [leads, setLeads] = useState<string[]>(project.leads || []);
   const [start, setStart] = useState(project.plannedStart.split("T")[0]);
   const [end, setEnd] = useState(project.plannedEnd.split("T")[0]);
@@ -638,6 +647,7 @@ function ProjectDetail({
         statusId,
         size: size || null,
         pointEstimate: points ? Number(points) : null,
+        color,
         leads,
         plannedStart: start,
         plannedEnd: end,
@@ -672,9 +682,12 @@ function ProjectDetail({
     return (
       <div className="border border-t-0 border-border rounded-b-md p-4 space-y-4 bg-accent/10">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">{project.title}</h3>
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-            Edit
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: project.color }} />
+            <h3 className="font-semibold">{project.title}</h3>
+          </div>
+          <Button variant="ghost-accent" size="sm" onClick={() => setEditing(true)}>
+            <Pencil /> Edit
           </Button>
         </div>
 
@@ -754,6 +767,27 @@ function ProjectDetail({
           onChange={(e) => setTitle(e.target.value)}
           className="mt-1 input-field"
         />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Bar Color</label>
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {PROJECT_PALETTE.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setColor(c)}
+              className={`w-6 h-6 rounded-sm transition-all ${color === c ? "ring-2 ring-ring ring-offset-1 ring-offset-background scale-110" : "hover:scale-110"}`}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="w-6 h-6 rounded-sm border border-border cursor-pointer"
+            title="Custom color"
+          />
+        </div>
       </div>
       <div>
         <label className="text-sm font-medium">Description</label>
@@ -908,8 +942,8 @@ function GanttFullscreen({
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <h1 className="text-xl font-bold">{title} — Timeline</h1>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Exit Fullscreen
+        <Button variant="ghost-accent" size="sm" onClick={onClose}>
+          <Minimize2 /> Exit
         </Button>
       </div>
       <div className="flex-1 overflow-auto p-6">

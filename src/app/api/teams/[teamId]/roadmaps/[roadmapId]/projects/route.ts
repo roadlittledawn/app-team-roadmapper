@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { TeamSpace } from "@/models/team-space";
 import { Roadmap } from "@/models/roadmap";
-import { Project } from "@/models/project";
+import { Project, PROJECT_PALETTE } from "@/models/project";
 
 async function verifyAccess(teamId: string, roadmapId: string, userId: string) {
   await connectDB();
@@ -49,11 +49,15 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const existingCount = await Project.countDocuments({ roadmapId });
+  const autoColor = PROJECT_PALETTE[existingCount % PROJECT_PALETTE.length];
+
   const project = await Project.create({
     title: body.title.trim(),
     description: body.description || "",
     size: body.size || null,
     pointEstimate: body.pointEstimate ?? null,
+    color: body.color || autoColor,
     statusId: body.statusId,
     plannedStart: new Date(body.plannedStart),
     plannedEnd: new Date(body.plannedEnd),

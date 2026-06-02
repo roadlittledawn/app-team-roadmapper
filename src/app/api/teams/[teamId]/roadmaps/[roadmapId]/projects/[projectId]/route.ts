@@ -41,6 +41,7 @@ export async function PUT(
   if (body.statusId) update.statusId = body.statusId;
   if (body.plannedStart) update.plannedStart = new Date(body.plannedStart);
   if (body.plannedEnd) update.plannedEnd = new Date(body.plannedEnd);
+  if (body.color) update.color = body.color;
   if (body.leads) update.leads = body.leads;
   if (body.milestones) update.milestones = body.milestones;
   if (body.links !== undefined) update.links = body.links;
