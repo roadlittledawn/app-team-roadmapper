@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-US", { timeZone: "UTC" });
+}
+
 interface Team {
   _id: string;
   name: string;
@@ -309,8 +313,8 @@ export default function TeamDetailPage() {
                     )}
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(roadmap.startDate).toLocaleDateString()} –{" "}
-                    {new Date(roadmap.endDate).toLocaleDateString()}
+                    {formatDate(roadmap.startDate)} –{" "}
+                    {formatDate(roadmap.endDate)}
                   </span>
                 </div>
               ))}
