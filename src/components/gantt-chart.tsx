@@ -118,7 +118,7 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
                   {/* Today marker */}
                   {today >= start && today <= end && (
                     <div
-                      className="absolute top-0 w-px h-full bg-foreground/30"
+                      className="absolute top-0 w-0.5 h-full bg-primary"
                       style={{ left: `${getPosition(today)}%` }}
                     />
                   )}

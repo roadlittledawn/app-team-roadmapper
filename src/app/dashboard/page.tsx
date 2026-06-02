@@ -65,7 +65,7 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 p-6 md:p-10">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between pb-2 border-b border-border mb-8">
           <h1 className="text-2xl font-bold">Team Spaces</h1>
           <Button variant="ghost" onClick={handleLogout}>
             Sign out
@@ -78,7 +78,7 @@ export default function DashboardPage() {
             placeholder="New team space name..."
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 input-field"
           />
           <Button type="submit" disabled={creating || !newName.trim()}>
             {creating ? "Creating..." : "Create"}
@@ -95,7 +95,7 @@ export default function DashboardPage() {
               <button
                 key={team._id}
                 onClick={() => router.push(`/teams/${team._id}`)}
-                className="flex items-center justify-between rounded-lg border border-border p-4 text-left hover:bg-accent transition-colors"
+                className="flex items-center justify-between rounded-md border border-border p-4 text-left hover:bg-muted transition-colors"
               >
                 <span className="font-medium">{team.name}</span>
                 <span className="text-xs text-muted-foreground">

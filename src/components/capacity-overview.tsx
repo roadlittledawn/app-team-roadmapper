@@ -74,7 +74,7 @@ export function CapacityOverview({
           <div className="text-xs text-muted-foreground">Budget</div>
         </div>
         <div>
-          <div className={`text-2xl font-bold ${overCommitted ? "text-red-500" : ""}`}>
+          <div className={`text-2xl font-bold ${overCommitted ? "text-destructive" : ""}`}>
             {utilization !== null ? `${utilization}%` : "—"}
           </div>
           <div className="text-xs text-muted-foreground">Utilization</div>
@@ -86,12 +86,12 @@ export function CapacityOverview({
         <div className="space-y-1">
           <div className="h-3 rounded-full bg-muted overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${overCommitted ? "bg-red-500" : "bg-green-500"}`}
+              className={`h-full rounded-full transition-all ${overCommitted ? "bg-destructive" : "bg-primary"}`}
               style={{ width: `${Math.min(utilization || 0, 100)}%` }}
             />
           </div>
           {overCommitted && (
-            <p className="text-xs text-red-500 font-medium">
+            <p className="text-xs text-destructive font-medium">
               Over budget by {totalEffort - budget} {unit}
             </p>
           )}
