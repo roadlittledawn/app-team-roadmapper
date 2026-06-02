@@ -20,12 +20,14 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 **New concepts introduced:**
 - **Team Space**: An isolated container for a single team/role's roadmaps, roster, and backlog
 - **Roadmap**: A bounded planning period (start/end dates) containing a set of projects. One active per team space, past roadmaps archived.
-- **Project**: A unit of work within a roadmap with title, T-shirt size, point estimate, status, timeline, and assigned lead(s)
+- **Project**: A unit of work within a roadmap with title, T-shirt size, optional point estimate (depending on estimation mode), status, timeline, and assigned lead(s)
+- **Estimation Mode**: A per-roadmap setting — either `points` (T-shirt size + story points, budget in points) or `sizes-only` (T-shirt size only, budget in size-unit weights)
 - **Backlog**: A team-level holding area for projects removed from a roadmap that retain their metadata for future use
-- **T-Shirt Size**: An estimation category (S/M/L/XL) with configurable point ranges per team
-- **Thirds Framework**: A custom estimation method that divides each T-shirt size's point range into three equal bands and takes the midpoint (rounded up) of each band as low/mid/high estimates
+- **T-Shirt Size**: An estimation category (S/M/L/XL) with configurable point ranges and size-unit weights per team
+- **Size-Unit Weight**: A numeric weight assigned to each T-shirt size (e.g., S=1, M=2, L=4, XL=8) used for capacity math in `sizes-only` mode
+- **Thirds Framework**: A custom estimation method that divides each T-shirt size's point range into three equal bands and takes the midpoint (rounded up) of each band as low/mid/high estimates (used in `points` mode)
 - **Roadmap Roster**: A per-roadmap snapshot of team members, referencing the central team member store
-- **Capacity Budget**: A manually-entered number representing the team's estimated throughput for a roadmap period
+- **Capacity Budget**: A manually-entered number representing the team's estimated throughput for a roadmap period (in story points or size-units depending on estimation mode)
 
 ## User Stories
 
@@ -35,6 +37,7 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 
 ### Roadmap Management
 - As a user, I want to create roadmaps with custom start/end dates so that I can plan work for any time period
+- As a user, I want to choose an estimation mode per roadmap (`points` or `sizes-only`) so that I can match how my team currently works
 - As a user, I want to view past roadmaps so that I can reference historical data
 - As a user, I want to set a manual capacity budget per roadmap so that I can see if I'm overcommitted
 
@@ -45,9 +48,9 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 - As a user, I want to deprioritize projects into a backlog without losing their data so that I can pick them up later
 
 ### Estimation
-- As a user, I want to configure T-shirt size point ranges per team so that sizing reflects my team's velocity
-- As a user, I want to record consensus T-shirt size and point estimate for each project so that I have sizing data
-- As a user, I want to see the thirds breakdown (low/mid/high) for each T-shirt size so that the team has reference points during estimation
+- As a user, I want to configure T-shirt size point ranges and size-unit weights per team so that sizing reflects my team's approach
+- As a user, I want to record consensus T-shirt size for each project, and optionally a point estimate when in `points` mode
+- As a user, I want to see the thirds breakdown (low/mid/high) for each T-shirt size as a reference during estimation (in `points` mode)
 
 ### Visualization
 - As a user, I want a Gantt chart showing projects across weeks so that I can see the timeline at a glance
@@ -66,7 +69,7 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 - [ ] **AC5:** Given a team space, when the user views it, then they see the active roadmap, roster, and backlog
 
 ### Roadmaps
-- [ ] **AC6:** Given a team space with no active roadmap, when user creates a roadmap with start/end dates, then it becomes the active roadmap
+- [ ] **AC6:** Given a team space with no active roadmap, when user creates a roadmap with start/end dates and estimation mode, then it becomes the active roadmap
 - [ ] **AC7:** Given an active roadmap, when its end date passes or user marks it complete, then it becomes archived and viewable
 - [ ] **AC8:** Given a roadmap, when user sets a capacity budget, then the budget is displayed in the capacity overview
 
@@ -81,8 +84,9 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 - [ ] **AC14:** Given custom statuses, when user reorders them, then the new order is reflected in the UI
 
 ### Estimation
-- [ ] **AC15:** Given a team's configured size ranges (e.g., S=1-12, M=13-25), when viewing estimation, then the thirds breakdown shows correct low/mid/high values
-- [ ] **AC16:** Given a project, when user records a T-shirt size and point estimate, then both are stored and displayed
+- [ ] **AC15:** Given a team's configured size ranges (e.g., S=1-12, M=13-25), when viewing estimation in `points` mode, then the thirds breakdown shows correct low/mid/high values
+- [ ] **AC16:** Given a roadmap in `points` mode, when user records a T-shirt size and point estimate for a project, then both are stored and displayed
+- [ ] **AC16b:** Given a roadmap in `sizes-only` mode, when user records a T-shirt size for a project, then the size is stored and point estimate field is not shown
 
 ### Gantt Chart
 - [ ] **AC17:** Given a roadmap with projects, when viewing the Gantt chart, then each project shows as a bar spanning its planned start-to-end dates at weekly resolution
@@ -90,7 +94,8 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 - [ ] **AC19:** Given a project completed before its end date, when viewing Gantt, then the bar ends at the actual completion point
 
 ### Capacity Overview
-- [ ] **AC20:** Given a roadmap with projects, when viewing capacity, then user sees: total project count, breakdown by size, breakdown by status, and budget vs total estimated effort
+- [ ] **AC20:** Given a roadmap in `points` mode, when viewing capacity, then user sees: total project count, breakdown by size, breakdown by status, and budget (story points) vs total estimated points
+- [ ] **AC20b:** Given a roadmap in `sizes-only` mode, when viewing capacity, then user sees: total project count, breakdown by size, breakdown by status, and budget (size-units) vs total size-unit weight
 
 ## API Contract
 
@@ -141,7 +146,7 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 
 **Request:**
 ```json
-{ "title": "string", "startDate": "string", "endDate": "string", "budget": "number | null" }
+{ "title": "string", "startDate": "string", "endDate": "string", "estimationMode": "points | sizes-only", "budget": "number | null" }
 ```
 
 ### GET /api/teams/:teamId/roadmaps/:roadmapId
@@ -184,8 +189,10 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 ```json
 {
   "sizes": [
-    { "label": "S", "minPoints": 1, "maxPoints": 12, "weeksReference": "1-2" },
-    { "label": "M", "minPoints": 13, "maxPoints": 25, "weeksReference": "3-5" }
+    { "label": "S", "minPoints": 1, "maxPoints": 12, "weeksReference": "1-2", "weight": 1 },
+    { "label": "M", "minPoints": 13, "maxPoints": 25, "weeksReference": "3-5", "weight": 2 },
+    { "label": "L", "minPoints": 26, "maxPoints": 50, "weeksReference": "6-10", "weight": 4 },
+    { "label": "XL", "minPoints": 51, "maxPoints": 100, "weeksReference": "11-16", "weight": 8 }
   ]
 }
 ```
@@ -218,11 +225,11 @@ A full-stack CRUD application for planning and tracking team roadmaps with capac
 | User | Single app owner with auth credentials | New |
 | TeamSpace | Isolated container for a team's roadmaps and data | New |
 | TeamMember | Person on a team (name, role) | New |
-| Roadmap | Bounded time period with projects and roster snapshot | New |
+| Roadmap | Bounded time period with projects, roster snapshot, and estimation mode (`points` or `sizes-only`) | New |
 | RoadmapRoster | Snapshot of team members for a specific roadmap | New |
 | Project | Unit of work with sizing, timeline, status, and leads | New |
 | ProjectStatus | Custom status with label, color, and order | New |
-| SizingConfig | T-shirt size definitions with point ranges per team | New |
+| SizingConfig | T-shirt size definitions with point ranges and size-unit weights per team | New |
 | BacklogProject | Deprioritized project retaining all metadata | New |
 
 ### Relationships
@@ -247,7 +254,9 @@ Project ──── assigned to ───→ TeamMember (many:many)
 |------|------------|------------------|
 | T-Shirt Size | Estimation category (S/M/L/XL) with point range | This spec |
 | Thirds Framework | Divide point range into 3 bands, midpoint of each = low/mid/high | This spec |
-| Capacity Budget | Manually-entered number for team's estimated throughput | This spec |
+| Estimation Mode | Per-roadmap setting: `points` (T-shirt + story points) or `sizes-only` (T-shirt only) | This spec |
+| Size-Unit Weight | Numeric weight per T-shirt size (e.g., S=1, M=2, L=4, XL=8) for capacity math in sizes-only mode | This spec |
+| Capacity Budget | Manually-entered number for team's estimated throughput (in points or size-units per mode) | This spec |
 | Overrun | Visual indicator when project extends past planned end date | This spec |
 | Active Roadmap | The current (non-archived) roadmap for a team space | This spec |
 
@@ -353,6 +362,8 @@ This is a **Next.js monolith** deployed to Vercel:
 | S13 | Multiple active roadmaps per team? | No — one active, past ones archived and viewable | User |
 | S14 | Gantt time resolution? | Weeks | User |
 | S15 | Drag to adjust on Gantt? | No, view-only | User |
+| S16 | Are story points optional? | Yes — per-roadmap estimation mode: `points` (T-shirt + points, budget in points) or `sizes-only` (T-shirt only, budget in size-unit weights) | User |
+| S17 | Can estimation mode vary between roadmaps? | Yes — configurable per roadmap so the same team can switch approaches across periods | User |
 
 ### Open Questions
 
@@ -360,32 +371,7 @@ No open questions — all requirements clarified.
 
 ## Testing Strategy
 
-### Unit Tests
-
-| Component | Test Case | Expected Behavior |
-|-----------|-----------|-------------------|
-| Thirds calculation | S=1-12 input | Returns low=3, mid=7, high=11 |
-| Thirds calculation | Range of 3 (min viable) | Returns correct 3 values |
-| JWT middleware | Valid token | Passes through to handler |
-| JWT middleware | Expired/invalid token | Returns 401 |
-| Overrun detection | Project in-progress past end date | Flags as overrun |
-| Overrun detection | Project done before end date | No overrun flag |
-
-### Integration Tests
-
-| Scenario | Components | Expected Outcome |
-|----------|------------|------------------|
-| Create team + roadmap + project flow | API routes → MongoDB | Full CRUD persisted correctly |
-| Deprioritize project to backlog | API → DB | Project moves to backlog with metadata |
-| Promote backlog project | API → DB | Project added to roadmap with existing sizing |
-
-### E2E Tests
-
-| User Flow | Steps | Expected Result |
-|-----------|-------|-----------------|
-| Full planning workflow | Login → Create team → Add members → Create roadmap → Add projects → View Gantt | All screens render correctly, data persists |
-| Estimation flow | Configure sizes → Add project → Enter size/points | Thirds display correctly, estimate saved |
-| Deprioritize/promote | Remove project from roadmap → View backlog → Add to new roadmap | Data preserved across transitions |
+Deferred until MVP is functional. Tests will be added as a follow-up change.
 
 ## Out of Scope
 
