@@ -8,7 +8,7 @@ export interface IProject extends Document {
   statusId: mongoose.Types.ObjectId;
   plannedStart: Date;
   plannedEnd: Date;
-  leads: mongoose.Types.ObjectId[];
+  leads: string[];
   roadmapId: mongoose.Types.ObjectId;
   teamId: mongoose.Types.ObjectId;
   milestones: string[];
@@ -26,7 +26,7 @@ const ProjectSchema = new Schema<IProject>(
     statusId: { type: Schema.Types.ObjectId, ref: "ProjectStatus", required: true },
     plannedStart: { type: Date, required: true },
     plannedEnd: { type: Date, required: true },
-    leads: [{ type: Schema.Types.ObjectId, ref: "TeamMember" }],
+    leads: [{ type: String }],
     roadmapId: { type: Schema.Types.ObjectId, ref: "Roadmap", required: true },
     teamId: { type: Schema.Types.ObjectId, ref: "TeamSpace", required: true },
     milestones: [{ type: String }],
