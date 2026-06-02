@@ -24,7 +24,11 @@ export async function GET(
   let config = await SizingConfig.findOne({ teamId }).lean();
 
   if (!config) {
-    config = (await SizingConfig.create({ teamId, sizes: DEFAULT_SIZES })).toObject();
+    config = (await SizingConfig.findOneAndUpdate(
+      { teamId },
+      { $setOnInsert: { sizes: DEFAULT_SIZES } },
+      { upsert: true, new: true }
+    ).lean());
   }
 
   return NextResponse.json({ sizingConfig: config });
