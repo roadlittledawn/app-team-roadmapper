@@ -1,5 +1,8 @@
+import { config } from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+
+config({ path: ".env.local" });
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/team-roadmapper";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@example.com";
