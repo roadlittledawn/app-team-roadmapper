@@ -61,6 +61,7 @@ export async function POST(
     roadmapId,
     teamId,
     milestones: body.milestones || [],
+    links: body.links || [],
   });
 
   return NextResponse.json({ project }, { status: 201 });

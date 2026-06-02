@@ -12,6 +12,7 @@ export interface IProject extends Document {
   roadmapId: mongoose.Types.ObjectId;
   teamId: mongoose.Types.ObjectId;
   milestones: string[];
+  links: { label: string; url: string }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +30,7 @@ const ProjectSchema = new Schema<IProject>(
     roadmapId: { type: Schema.Types.ObjectId, ref: "Roadmap", required: true },
     teamId: { type: Schema.Types.ObjectId, ref: "TeamSpace", required: true },
     milestones: [{ type: String }],
+    links: [{ label: { type: String, default: "" }, url: { type: String, required: true } }],
   },
   { timestamps: true }
 );

@@ -4,6 +4,23 @@ import { requireAuth } from "@/lib/auth";
 import { TeamSpace } from "@/models/team-space";
 import { Project } from "@/models/project";
 
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ teamId: string; roadmapId: string; projectId: string }> }
+) {
+  const session = await requireAuth();
+  const { teamId, roadmapId, projectId } = await params;
+  await connectDB();
+
+  const team = await TeamSpace.findOne({ _id: teamId, userId: session.userId }).lean();
+  if (!team) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const project = await Project.findOne({ _id: projectId, roadmapId, teamId }).lean();
+  if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+
+  return NextResponse.json({ project });
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ teamId: string; roadmapId: string; projectId: string }> }
@@ -26,6 +43,7 @@ export async function PUT(
   if (body.plannedEnd) update.plannedEnd = new Date(body.plannedEnd);
   if (body.leads) update.leads = body.leads;
   if (body.milestones) update.milestones = body.milestones;
+  if (body.links !== undefined) update.links = body.links;
 
   const project = await Project.findOneAndUpdate(
     { _id: projectId, roadmapId, teamId },
