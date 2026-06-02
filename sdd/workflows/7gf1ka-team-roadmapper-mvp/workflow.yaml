@@ -1,0 +1,31 @@
+id: 7gf1ka
+name: team-roadmapper-mvp
+source: interactive
+created: 2026-06-02
+current: 01-team-roadmapper-mvp
+
+phase: implement
+step: implementing
+
+progress:
+  total_items: 1
+  specs_completed: 0
+  specs_pending: 1
+  plans_completed: 0
+  plans_pending: 1
+  implemented: 0
+  reviewed: 0
+
+items:
+  - id: 01-team-roadmapper-mvp
+    change_id: team-roadmapper-mvp-1
+    title: Team Roadmapper MVP
+    type: feature
+    location: changes/2026/06/02/7gf1ka-team-roadmapper-mvp/01-team-roadmapper-mvp
+    context_sections: []
+    depends_on: []
+    spec_status: approved
+    plan_status: approved
+    impl_status: in_progress
+    review_status: pending
+    substep: null

@@ -4,11 +4,9 @@ This file tracks all specifications in the project.
 
 ## Changes
 
-No changes yet. Create your first change with:
-
-```
-/sdd I want to create a new feature
-```
+| Change ID | Title | Status | Spec |
+|-----------|-------|--------|------|
+| team-roadmapper-mvp-1 | Team Roadmapper MVP | spec_review | [SPEC.md](../changes/2026/06/02/7gf1ka-team-roadmapper-mvp/01-team-roadmapper-mvp/SPEC.md) |
 
 ## Domain Knowledge
 
