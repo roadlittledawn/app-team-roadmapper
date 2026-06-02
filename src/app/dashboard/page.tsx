@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { LogOut, Plus } from "lucide-react";
 
 interface Team {
   _id: string;
@@ -68,7 +69,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between pb-2 border-b border-border mb-8">
           <h1 className="text-2xl font-bold">Team Spaces</h1>
           <Button variant="ghost" onClick={handleLogout}>
-            Sign out
+            <LogOut /> Sign out
           </Button>
         </div>
 
@@ -81,7 +82,7 @@ export default function DashboardPage() {
             className="flex-1 input-field"
           />
           <Button type="submit" disabled={creating || !newName.trim()}>
-            {creating ? "Creating..." : "Create"}
+            <Plus /> {creating ? "Creating..." : "Create"}
           </Button>
         </form>
 

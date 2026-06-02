@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { ArrowLeft, Pencil, Plus, UserPlus } from "lucide-react";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", { timeZone: "UTC" });
@@ -204,7 +205,7 @@ export default function TeamDetailPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" onClick={() => router.push("/dashboard")}>
-            &larr; Back
+            <ArrowLeft /> Back
           </Button>
           <h1 className="text-2xl font-bold">{team.name}</h1>
         </div>
@@ -228,7 +229,7 @@ export default function TeamDetailPage() {
               className="w-48 input-field"
             />
             <Button type="submit" disabled={!newMemberName.trim()}>
-              Add
+              <UserPlus /> Add
             </Button>
           </form>
 
@@ -265,8 +266,8 @@ export default function TeamDetailPage() {
         <section className="mb-10">
           <div className="flex items-center justify-between pb-2 border-b border-border mb-4">
             <h2 className="text-lg font-semibold">T-Shirt Sizes</h2>
-            <Button variant="ghost" size="sm" onClick={openSizingEditor}>
-              Edit
+            <Button variant="ghost-accent" size="sm" onClick={openSizingEditor}>
+              <Pencil /> Edit
             </Button>
           </div>
 
@@ -391,7 +392,7 @@ export default function TeamDetailPage() {
             <h2 className="text-lg font-semibold">Roadmaps</h2>
             {!showRoadmapForm && (
               <Button onClick={() => setShowRoadmapForm(true)}>
-                New Roadmap
+                <Plus /> New Roadmap
               </Button>
             )}
           </div>
