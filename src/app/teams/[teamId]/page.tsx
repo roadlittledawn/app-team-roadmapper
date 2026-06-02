@@ -15,6 +15,16 @@ interface Member {
   role: string;
 }
 
+interface Roadmap {
+  _id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  estimationMode: "points" | "sizes-only";
+  budget: number | null;
+  status: string;
+}
+
 export default function TeamDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -22,18 +32,27 @@ export default function TeamDetailPage() {
 
   const [team, setTeam] = useState<Team | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberRole, setNewMemberRole] = useState("");
+  const [showRoadmapForm, setShowRoadmapForm] = useState(false);
+  const [roadmapTitle, setRoadmapTitle] = useState("");
+  const [roadmapStart, setRoadmapStart] = useState("");
+  const [roadmapEnd, setRoadmapEnd] = useState("");
+  const [roadmapMode, setRoadmapMode] = useState<"points" | "sizes-only">("points");
+  const [roadmapBudget, setRoadmapBudget] = useState("");
+  const [roadmapError, setRoadmapError] = useState("");
 
   useEffect(() => {
     fetchData();
   }, [teamId]);
 
   async function fetchData() {
-    const [teamRes, membersRes] = await Promise.all([
+    const [teamRes, membersRes, roadmapsRes] = await Promise.all([
       fetch(`/api/teams/${teamId}`),
       fetch(`/api/teams/${teamId}/members`),
+      fetch(`/api/teams/${teamId}/roadmaps`),
     ]);
 
     if (teamRes.ok) {
@@ -43,6 +62,10 @@ export default function TeamDetailPage() {
     if (membersRes.ok) {
       const data = await membersRes.json();
       setMembers(data.members);
+    }
+    if (roadmapsRes.ok) {
+      const data = await roadmapsRes.json();
+      setRoadmaps(data.roadmaps);
     }
     setLoading(false);
   }
@@ -67,6 +90,36 @@ export default function TeamDetailPage() {
   async function handleDeleteMember(memberId: string) {
     await fetch(`/api/teams/${teamId}/members/${memberId}`, { method: "DELETE" });
     await fetchData();
+  }
+
+  async function handleCreateRoadmap(e: React.FormEvent) {
+    e.preventDefault();
+    setRoadmapError("");
+
+    const res = await fetch(`/api/teams/${teamId}/roadmaps`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: roadmapTitle.trim(),
+        startDate: roadmapStart,
+        endDate: roadmapEnd,
+        estimationMode: roadmapMode,
+        budget: roadmapBudget ? Number(roadmapBudget) : null,
+      }),
+    });
+
+    if (res.ok) {
+      setRoadmapTitle("");
+      setRoadmapStart("");
+      setRoadmapEnd("");
+      setRoadmapMode("points");
+      setRoadmapBudget("");
+      setShowRoadmapForm(false);
+      await fetchData();
+    } else {
+      const data = await res.json();
+      setRoadmapError(data.error || "Failed to create roadmap");
+    }
   }
 
   if (loading) {
@@ -149,10 +202,120 @@ export default function TeamDetailPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold mb-4">Roadmaps</h2>
-          <p className="text-sm text-muted-foreground">
-            No roadmaps yet. This will be implemented in the next phase.
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Roadmaps</h2>
+            {!showRoadmapForm && (
+              <Button onClick={() => setShowRoadmapForm(true)}>
+                New Roadmap
+              </Button>
+            )}
+          </div>
+
+          {showRoadmapForm && (
+            <form onSubmit={handleCreateRoadmap} className="rounded-md border border-border p-4 mb-4 space-y-3">
+              <div>
+                <label className="text-sm font-medium">Title</label>
+                <input
+                  type="text"
+                  value={roadmapTitle}
+                  onChange={(e) => setRoadmapTitle(e.target.value)}
+                  placeholder="Q3 2026 Roadmap"
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium">Start Date</label>
+                  <input
+                    type="date"
+                    value={roadmapStart}
+                    onChange={(e) => setRoadmapStart(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">End Date</label>
+                  <input
+                    type="date"
+                    value={roadmapEnd}
+                    onChange={(e) => setRoadmapEnd(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium">Estimation Mode</label>
+                  <select
+                    value={roadmapMode}
+                    onChange={(e) => setRoadmapMode(e.target.value as "points" | "sizes-only")}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="points">Points (T-shirt + story points)</option>
+                    <option value="sizes-only">Sizes Only (weighted T-shirts)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">
+                    Budget ({roadmapMode === "points" ? "pts" : "units"})
+                  </label>
+                  <input
+                    type="number"
+                    value={roadmapBudget}
+                    onChange={(e) => setRoadmapBudget(e.target.value)}
+                    placeholder="Optional"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+              {roadmapError && (
+                <p className="text-sm text-red-500">{roadmapError}</p>
+              )}
+              <div className="flex gap-2">
+                <Button type="submit" disabled={!roadmapTitle.trim() || !roadmapStart || !roadmapEnd}>
+                  Create Roadmap
+                </Button>
+                <Button type="button" variant="ghost" onClick={() => setShowRoadmapForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {roadmaps.length === 0 && !showRoadmapForm ? (
+            <p className="text-sm text-muted-foreground">
+              No roadmaps yet. Create one to start planning.
+            </p>
+          ) : (
+            <div className="grid gap-2">
+              {roadmaps.map((roadmap) => (
+                <div
+                  key={roadmap._id}
+                  className="flex items-center justify-between rounded-md border border-border p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => router.push(`/teams/${teamId}/roadmaps/${roadmap._id}`)}
+                >
+                  <div>
+                    <span className="font-medium">{roadmap.title}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {roadmap.estimationMode === "points" ? "Points" : "Sizes"}
+                    </span>
+                    {roadmap.status === "archived" && (
+                      <span className="ml-2 text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5">
+                        Archived
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(roadmap.startDate).toLocaleDateString()} –{" "}
+                    {new Date(roadmap.endDate).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
