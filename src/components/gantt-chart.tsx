@@ -15,6 +15,11 @@ interface GanttChartProps {
   endDate: string;
 }
 
+function parseLocalDate(dateStr: string): Date {
+  const d = dateStr.split("T")[0].split("-");
+  return new Date(Number(d[0]), Number(d[1]) - 1, Number(d[2]));
+}
+
 function getWeeksBetween(start: Date, end: Date): Date[] {
   const weeks: Date[] = [];
   const current = new Date(start);
@@ -32,9 +37,10 @@ function formatWeekLabel(date: Date): string {
 }
 
 export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseLocalDate(startDate);
+  const end = parseLocalDate(endDate);
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const weeks = getWeeksBetween(start, end);
   const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
@@ -48,31 +54,38 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
   }
 
   function isOverrun(project: GanttProject): boolean {
-    const plannedEnd = new Date(project.plannedEnd);
+    const plannedEnd = parseLocalDate(project.plannedEnd);
     const doneStatuses = ["done", "complete", "completed"];
     return (
       today > plannedEnd && !doneStatuses.includes(project.statusLabel.toLowerCase())
     );
   }
 
+  const weekPositions = weeks.map((week) => getPosition(week));
+
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[600px]">
         {/* Header */}
-        <div className="flex border-b border-border pb-1 mb-2">
+        <div className="flex border-b border-border pb-1 mb-0">
           <div className="w-48 shrink-0 text-xs font-medium text-muted-foreground">
             Project
           </div>
-          <div className="flex-1 flex">
-            {weeks.map((week, i) => (
-              <div
-                key={i}
-                className="text-xs text-muted-foreground text-center"
-                style={{ width: `${100 / weeks.length}%` }}
-              >
-                {formatWeekLabel(week)}
-              </div>
-            ))}
+          <div className="flex-1 relative">
+            {weeks.map((week, i) => {
+              const left = weekPositions[i];
+              if (left <= 0) return null;
+              return (
+                <div
+                  key={i}
+                  className="absolute text-xs text-muted-foreground border-l border-border/60 pl-1"
+                  style={{ left: `${left}%` }}
+                >
+                  {formatWeekLabel(week)}
+                </div>
+              );
+            })}
+            <div className="invisible text-xs">&nbsp;</div>
           </div>
         </div>
 
@@ -81,8 +94,22 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
           <p className="text-sm text-muted-foreground py-4">No projects to display.</p>
         ) : (
           projects.map((project) => {
-            const barLeft = getPosition(new Date(project.plannedStart));
-            const barRight = getPosition(new Date(project.plannedEnd));
+            const projStart = parseLocalDate(project.plannedStart);
+            const projEnd = parseLocalDate(project.plannedEnd);
+
+            const startWeekIdx = weeks.findIndex((w, i) => {
+              const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+              return projStart >= w && projStart < nextWeek;
+            });
+            const endWeekIdx = weeks.findIndex((w, i) => {
+              const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+              return projEnd >= w && projEnd < nextWeek;
+            });
+
+            const barLeft = startWeekIdx >= 0 ? weekPositions[startWeekIdx] : getPosition(projStart);
+            const barRight = endWeekIdx >= 0
+              ? (endWeekIdx < weeks.length - 1 ? weekPositions[endWeekIdx + 1] : 100)
+              : getPosition(projEnd);
             const barWidth = Math.max(barRight - barLeft, 1);
             const overrun = isOverrun(project);
             const overrunRight = overrun ? getPosition(today) : barRight;
@@ -93,10 +120,20 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
                 <div className="w-48 shrink-0 text-sm truncate pr-2" title={project.title}>
                   {project.title}
                 </div>
-                <div className="flex-1 relative h-6 bg-muted/30 rounded-sm">
+                <div className="flex-1 relative h-8">
+                  {/* Week grid lines */}
+                  {weekPositions.map((pos, i) =>
+                    pos > 0 ? (
+                      <div
+                        key={i}
+                        className="absolute top-0 h-full border-l border-border/30"
+                        style={{ left: `${pos}%` }}
+                      />
+                    ) : null
+                  )}
                   {/* Planned bar */}
                   <div
-                    className="absolute top-1 h-4 rounded-sm"
+                    className="absolute top-2 h-4 rounded-sm"
                     style={{
                       left: `${barLeft}%`,
                       width: `${barWidth}%`,
@@ -106,7 +143,7 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
                   {/* Overrun extension */}
                   {overrun && overrunWidth > 0 && (
                     <div
-                      className="absolute top-1 h-4 rounded-r-sm"
+                      className="absolute top-2 h-4 rounded-r-sm"
                       style={{
                         left: `${barRight}%`,
                         width: `${overrunWidth}%`,
