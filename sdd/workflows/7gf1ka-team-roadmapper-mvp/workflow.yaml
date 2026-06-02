@@ -4,8 +4,8 @@ source: interactive
 created: 2026-06-02
 current: 01-team-roadmapper-mvp
 
-phase: plan
-step: plan_review
+phase: implement
+step: implementing
 
 progress:
   total_items: 1
@@ -25,7 +25,7 @@ items:
     context_sections: []
     depends_on: []
     spec_status: approved
-    plan_status: in_progress
-    impl_status: pending
+    plan_status: approved
+    impl_status: in_progress
     review_status: pending
     substep: null

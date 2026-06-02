@@ -19,7 +19,7 @@ sdd_version: 7.3.0
   - API routes (App Router)
   - React frontend (Tailwind + shadcn/ui)
   - MongoDB models (Mongoose)
-  - Auth (bcrypt + JWT)
+  - Auth (bcrypt + jose for JWT)
 
 ## Phases
 
@@ -35,6 +35,7 @@ sdd_version: 7.3.0
 - Base layout with dark theme, responsive shell
 
 **Key decisions:**
+- Next.js v16 (latest)
 - App Router (not Pages Router)
 - Mongoose for MongoDB ODM
 - shadcn/ui components installed as needed per phase
@@ -48,7 +49,7 @@ sdd_version: 7.3.0
 - User model (MongoDB) with hashed password
 - Seed script to create the single user
 - POST /api/auth/login endpoint
-- JWT middleware for protected routes
+- JWT auth via jose library + proxy (Next.js 16 proxy replaces middleware)
 - Login page UI
 - Auth context/provider for frontend
 
