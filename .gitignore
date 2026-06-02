@@ -6,6 +6,7 @@ dist/
 build/
 .next/
 *.tsbuildinfo
+next-env.d.ts
 
 # IDE
 .idea/
@@ -20,6 +21,9 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Settings backups
+.claude/*.backup
 
 # Logs
 *.log
