@@ -1,0 +1,34 @@
+change_id: team-roadmapper-mvp-1
+workflow_id: 7gf1ka
+status: complete
+current_step: 9
+current_question: null
+
+answers:
+  step_1:
+    problem: "No unified tool to plan team roadmaps, track project timelines against reality, and forecast capacity"
+    primary_user: "Single user (app owner) managing multiple teams/roles"
+    expected_outcome: "A single app to plan work per period, estimate with T-shirt sizing framework, and see what's on track vs not"
+
+  step_2:
+    auth: "bcrypt + JWT stored as env var"
+    team_members: "Central team roster collection, referenced per-roadmap as snapshot. Object reference for person info."
+    gantt_tracking: "Manual start/end dates entered. Gantt shows overrun when project still in progress or blocked past end date."
+    estimation_thirds: "Split T-shirt range into thirds, take midpoint of each third, round up. E.g. S=1-12: low=3, mid=7, high=11"
+    ui_preferences: "Tailwind/shadcn, dark mode default, responsive down to tablet"
+
+  step_3:
+    custom_statuses: "Fully custom, user can create new statuses with custom colors. No workflow/ordering rules for MVP."
+    roadmap_periods: "Start date + end date, no overlapping periods"
+    backlog: "Team-level backlog for deprioritized projects. Keeps sizing/milestone data. Can pull into future roadmaps or delete."
+    gantt_visual: "Solid bar for planned, lighter/transparent extension for overrun. Weekly resolution."
+    gantt_interactions: "View-only, no drag"
+
+  step_4:
+    sizing_votes: "Consensus result only, not per-person votes"
+    historical_data: "Manual for MVP. User looks at past roadmaps and manually enters budget."
+    capacity_budget: "Simple view: how many projects, how big, what status. Visual surfacing of overcommitment. Manual budget entry."
+    multiple_roadmaps: "One active per team, past roadmaps archived and viewable"
+
+  step_5:
+    team_roster: "Central team member store, snapshot referenced per-roadmap period"
