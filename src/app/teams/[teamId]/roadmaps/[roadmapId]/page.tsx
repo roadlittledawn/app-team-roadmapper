@@ -240,6 +240,8 @@ export default function RoadmapDetailPage() {
       plannedEnd: p.plannedEnd,
       statusColor: p.color || status.color,
       statusLabel: status.label,
+      leads: p.leads,
+      links: p.links,
     };
   });
 

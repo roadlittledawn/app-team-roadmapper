@@ -1,5 +1,12 @@
 "use client";
 
+import { Popover } from "@/components/ui/popover";
+
+interface GanttProjectLink {
+  label: string;
+  url: string;
+}
+
 interface GanttProject {
   _id: string;
   title: string;
@@ -7,6 +14,8 @@ interface GanttProject {
   plannedEnd: string;
   statusColor: string;
   statusLabel: string;
+  leads?: string[];
+  links?: GanttProjectLink[];
 }
 
 interface GanttChartProps {
@@ -18,6 +27,11 @@ interface GanttChartProps {
 function parseLocalDate(dateStr: string): Date {
   const d = dateStr.split("T")[0].split("-");
   return new Date(Number(d[0]), Number(d[1]) - 1, Number(d[2]));
+}
+
+function formatDate(dateStr: string): string {
+  const d = parseLocalDate(dateStr);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 function getWeeksBetween(start: Date, end: Date): Date[] {
@@ -34,6 +48,57 @@ function getWeeksBetween(start: Date, end: Date): Date[] {
 
 function formatWeekLabel(date: Date): string {
   return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+function ProjectPopoverContent({ project }: { project: GanttProject }) {
+  return (
+    <div className="space-y-2">
+      <div className="font-medium leading-snug">{project.title}</div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+        <div>
+          <span className="text-muted-foreground">Status</span>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: project.statusColor }} />
+            {project.statusLabel}
+          </div>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Assignee</span>
+          <div className="mt-0.5">{project.leads?.length ? project.leads.join(", ") : "Unassigned"}</div>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Start</span>
+          <div className="mt-0.5">{formatDate(project.plannedStart)}</div>
+        </div>
+        <div>
+          <span className="text-muted-foreground">End</span>
+          <div className="mt-0.5">{formatDate(project.plannedEnd)}</div>
+        </div>
+      </div>
+      {project.links && project.links.length > 0 && (
+        <div className="text-xs pt-1 border-t border-border/50">
+          <span className="text-muted-foreground">Links</span>
+          <div className="flex flex-col gap-0.5 mt-0.5">
+            {project.links.slice(0, 3).map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline truncate"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {link.label || link.url}
+              </a>
+            ))}
+            {project.links.length > 3 && (
+              <span className="text-muted-foreground">+{project.links.length - 3} more</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
@@ -115,11 +180,15 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
             const overrunRight = overrun ? getPosition(today) : barRight;
             const overrunWidth = overrunRight - barRight;
 
+            const popoverContent = <ProjectPopoverContent project={project} />;
+
             return (
-              <div key={project._id} className="flex items-center h-10 group">
-                <div className="w-48 shrink-0 text-sm truncate pr-2" title={project.title}>
-                  {project.title}
-                </div>
+              <div key={project._id} className="flex items-center h-10">
+                <Popover content={popoverContent}>
+                  <div className="w-48 shrink-0 text-sm truncate pr-2 cursor-default">
+                    {project.title}
+                  </div>
+                </Popover>
                 <div className="flex-1 relative h-8">
                   {/* Week grid lines */}
                   {weekPositions.map((pos, i) =>
@@ -132,14 +201,16 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
                     ) : null
                   )}
                   {/* Planned bar */}
-                  <div
-                    className="absolute top-2 h-4 rounded-sm"
-                    style={{
-                      left: `${barLeft}%`,
-                      width: `${barWidth}%`,
-                      backgroundColor: project.statusColor,
-                    }}
-                  />
+                  <Popover content={popoverContent}>
+                    <div
+                      className="absolute top-2 h-4 rounded-sm cursor-default"
+                      style={{
+                        left: `${barLeft}%`,
+                        width: `${barWidth}%`,
+                        backgroundColor: project.statusColor,
+                      }}
+                    />
+                  </Popover>
                   {/* Overrun extension */}
                   {overrun && overrunWidth > 0 && (
                     <div
