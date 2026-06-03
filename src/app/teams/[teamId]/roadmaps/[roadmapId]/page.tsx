@@ -9,7 +9,7 @@ import { CapacityOverview } from "@/components/capacity-overview";
 import { MilestoneManager } from "@/components/milestone-manager";
 import { MarkdownContent } from "@/components/markdown-content";
 import { MarkdownEditor } from "@/components/markdown-editor";
-import { ArrowLeft, Maximize2, Minimize2, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Info, Maximize2, Minimize2, Pencil, Plus } from "lucide-react";
 
 const PROJECT_PALETTE = [
   "#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981",
@@ -55,7 +55,7 @@ interface Project {
   color: string;
   plannedStart: string;
   plannedEnd: string;
-  targetEndDate?: string;
+  currentEndDate?: string | null;
   statusId: string;
   statusOverride?: string | null;
   leads: string[];
@@ -75,8 +75,16 @@ interface Member {
   role: string;
 }
 
+interface SizeEntry {
+  label: string;
+  minPoints: number;
+  maxPoints: number;
+  weeksReference: string;
+  weight: number;
+}
+
 interface SizingConfig {
-  sizes: { label: string; weight: number }[];
+  sizes: SizeEntry[];
 }
 
 export default function RoadmapDetailPage() {
@@ -113,6 +121,7 @@ export default function RoadmapDetailPage() {
   const [projectLinks, setProjectLinks] = useState<ProjectLink[]>([]);
   const [projectError, setProjectError] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [showSizingRef, setShowSizingRef] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -264,12 +273,25 @@ export default function RoadmapDetailPage() {
     const status = getStatus(p.statusId);
     const loadedMilestones = projectMilestones[p._id];
     const hasMilestones = (p.milestoneCount ?? 0) > 0 || (loadedMilestones && loadedMilestones.length > 0);
+
+    let effectiveEndDate: string | undefined;
+    if (loadedMilestones && loadedMilestones.length > 0) {
+      const latestMilestoneEnd = loadedMilestones.reduce((latest, m) => {
+        return m.plannedEnd > latest ? m.plannedEnd : latest;
+      }, "");
+      if (latestMilestoneEnd > p.plannedEnd) {
+        effectiveEndDate = latestMilestoneEnd;
+      }
+    } else if (p.currentEndDate && p.currentEndDate > p.plannedEnd) {
+      effectiveEndDate = p.currentEndDate;
+    }
+
     return {
       _id: p._id,
       title: p.title,
       plannedStart: p.plannedStart,
       plannedEnd: p.plannedEnd,
-      targetEndDate: p.targetEndDate,
+      effectiveEndDate,
       statusColor: p.color || status.color,
       statusLabel: status.label,
       leads: p.leads,
@@ -435,11 +457,50 @@ export default function RoadmapDetailPage() {
           {/* Project List */}
           <div>
             <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
-              <h2 className="text-lg font-semibold">Projects ({projects.length})</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold">Projects ({projects.length})</h2>
+                {sizingConfig && sizingConfig.sizes.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSizingRef(!showSizingRef)}
+                    className={showSizingRef ? "text-primary" : "text-muted-foreground"}
+                    title="Sizing reference"
+                  >
+                    <Info />
+                  </Button>
+                )}
+              </div>
               {!showProjectForm && (
                 <Button onClick={() => setShowProjectForm(true)}><Plus /> Add Project</Button>
               )}
             </div>
+
+            {showSizingRef && sizingConfig && (
+              <div className="mb-4 rounded-md border border-border bg-card p-3">
+                <h3 className="text-sm font-medium mb-2">Sizing Reference</h3>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-muted-foreground border-b border-border">
+                      <th className="pb-1 pr-4">Size</th>
+                      <th className="pb-1 pr-4">Points</th>
+                      <th className="pb-1 pr-4">Weeks</th>
+                      <th className="pb-1">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sizingConfig.sizes.map((s) => (
+                      <tr key={s.label} className="border-b border-border/50 last:border-0">
+                        <td className="py-1.5 pr-4 font-medium">{s.label}</td>
+                        <td className="py-1.5 pr-4">{s.minPoints}–{s.maxPoints}</td>
+                        <td className="py-1.5 pr-4">{s.weeksReference}</td>
+                        <td className="py-1.5">{s.weight}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {showProjectForm && (
               <form onSubmit={handleAddProject} className="rounded-md border border-border p-4 mb-4 space-y-3">
@@ -593,6 +654,14 @@ export default function RoadmapDetailPage() {
                 {projects.map((project) => {
                   const status = getStatus(project.statusId);
                   const isSelected = selectedProjectId === project._id;
+                  const loadedMs = projectMilestones[project._id];
+                  let effectiveEnd: string | undefined;
+                  if (loadedMs && loadedMs.length > 0) {
+                    const latestMs = loadedMs.reduce((latest, m) => m.plannedEnd > latest ? m.plannedEnd : latest, "");
+                    if (latestMs > project.plannedEnd) effectiveEnd = latestMs;
+                  } else if (project.currentEndDate && project.currentEndDate > project.plannedEnd) {
+                    effectiveEnd = project.currentEndDate;
+                  }
                   return (
                     <div key={project._id}>
                       <div
@@ -625,6 +694,9 @@ export default function RoadmapDetailPage() {
                         <span className="text-xs text-muted-foreground">
                           {formatDate(project.plannedStart)} –{" "}
                           {formatDate(project.plannedEnd)}
+                          {effectiveEnd && (
+                            <span className="text-destructive/80"> → {formatDate(effectiveEnd)}</span>
+                          )}
                         </span>
                       </div>
                       {isSelected && selectedProject && (
@@ -683,6 +755,7 @@ function ProjectDetail({
   const [leads, setLeads] = useState<string[]>(project.leads || []);
   const [start, setStart] = useState(project.plannedStart.split("T")[0]);
   const [end, setEnd] = useState(project.plannedEnd.split("T")[0]);
+  const [currentEnd, setCurrentEnd] = useState(project.currentEndDate?.split("T")[0] || "");
   const [links, setLinks] = useState<ProjectLink[]>(project.links || []);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -703,6 +776,7 @@ function ProjectDetail({
         leads,
         plannedStart: start,
         plannedEnd: end,
+        currentEndDate: currentEnd || null,
         links: links.filter((l) => l.url.trim()),
       }),
     });
@@ -929,6 +1003,17 @@ function ProjectDetail({
             className="mt-1 input-field"
           />
         </div>
+      </div>
+      <div>
+        <label className="text-sm font-medium">Current End Date</label>
+        <p className="text-xs text-muted-foreground">Set when the project has slipped past its planned end. Shows as dashed overage on the Gantt.</p>
+        <input
+          type="date"
+          value={currentEnd}
+          onChange={(e) => setCurrentEnd(e.target.value)}
+          min={end}
+          className="mt-1 input-field"
+        />
       </div>
       <div>
         <div className="flex items-center justify-between">

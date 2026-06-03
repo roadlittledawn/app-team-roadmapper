@@ -83,12 +83,4 @@ async function recalculateProjectStatus(projectId: string, teamId: string) {
     await Project.updateOne({ _id: projectId }, { statusId: derivedStatusId });
   }
 
-  const latestEnd = milestones.reduce((latest, m) => {
-    const end = new Date(m.plannedEnd);
-    return end > latest ? end : latest;
-  }, new Date(0));
-
-  if (latestEnd > new Date(project.targetEndDate)) {
-    await Project.updateOne({ _id: projectId }, { plannedEnd: latestEnd });
-  }
 }

@@ -23,7 +23,7 @@ interface GanttProject {
   title: string;
   plannedStart: string;
   plannedEnd: string;
-  targetEndDate?: string;
+  effectiveEndDate?: string;
   statusColor: string;
   statusLabel: string;
   leads?: string[];
@@ -218,8 +218,8 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
           projects.map((project) => {
             const projStart = parseLocalDate(project.plannedStart);
             const projEnd = parseLocalDate(project.plannedEnd);
-            const targetEnd = project.targetEndDate ? parseLocalDate(project.targetEndDate) : projEnd;
-            const hasOverage = projEnd > targetEnd;
+            const effectiveEnd = project.effectiveEndDate ? parseLocalDate(project.effectiveEndDate) : projEnd;
+            const hasOverage = effectiveEnd > projEnd;
             const isExpanded = expandedIds.has(project._id);
             const hasMilestones = project.hasMilestones || (project.milestones?.length ?? 0) > 0;
             const barColor = project.color || project.statusColor;
@@ -232,18 +232,22 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
               const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
               return projEnd >= w && projEnd < nextWeek;
             });
+            const effectiveEndWeekIdx = hasOverage ? weeks.findIndex((w, i) => {
+              const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+              return effectiveEnd >= w && effectiveEnd < nextWeek;
+            }) : -1;
 
             const barLeft = startWeekIdx >= 0 ? weekPositions[startWeekIdx] : getPosition(projStart);
-            const targetBarRight = hasOverage
-              ? getPosition(targetEnd)
-              : (endWeekIdx >= 0
-                ? (endWeekIdx < weeks.length - 1 ? weekPositions[endWeekIdx + 1] : 100)
-                : getPosition(projEnd));
-            const fullBarRight = endWeekIdx >= 0
+            const barRight = endWeekIdx >= 0
               ? (endWeekIdx < weeks.length - 1 ? weekPositions[endWeekIdx + 1] : 100)
               : getPosition(projEnd);
-            const barWidth = Math.max(targetBarRight - barLeft, 1);
-            const overageWidth = hasOverage ? Math.max(fullBarRight - targetBarRight, 0) : 0;
+            const overageRight = hasOverage
+              ? (effectiveEndWeekIdx >= 0
+                ? (effectiveEndWeekIdx < weeks.length - 1 ? weekPositions[effectiveEndWeekIdx + 1] : 100)
+                : getPosition(effectiveEnd))
+              : barRight;
+            const barWidth = Math.max(barRight - barLeft, 1);
+            const overageWidth = hasOverage ? Math.max(overageRight - barRight, 0) : 0;
 
             // Clipping indicators for milestones
             let milestonesBefore = 0;
@@ -296,7 +300,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                         />
                       ) : null
                     )}
-                    {/* Planned bar (up to target end) */}
+                    {/* Planned bar (original commitment) */}
                     <Popover content={popoverContent} delay={600} position="top">
                       <div
                         className={`absolute top-2 h-4 ${hasOverage ? "rounded-l-sm" : "rounded-sm"} ${hasMilestones ? "cursor-pointer" : "cursor-default"}`}
@@ -308,12 +312,12 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                         onClick={() => hasMilestones && toggleExpand(project._id)}
                       />
                     </Popover>
-                    {/* Overage extension (striped) */}
+                    {/* Overage extension (striped) — beyond original planned end */}
                     {hasOverage && overageWidth > 0 && (
                       <div
                         className="absolute top-2 h-4 rounded-r-sm"
                         style={{
-                          left: `${targetBarRight}%`,
+                          left: `${barRight}%`,
                           width: `${overageWidth}%`,
                           backgroundImage: `repeating-linear-gradient(
                             -45deg,

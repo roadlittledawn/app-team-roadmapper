@@ -42,7 +42,7 @@ export async function PUT(
   if (body.statusOverride !== undefined) update.statusOverride = body.statusOverride;
   if (body.plannedStart) update.plannedStart = new Date(body.plannedStart);
   if (body.plannedEnd) update.plannedEnd = new Date(body.plannedEnd);
-  if (body.targetEndDate) update.targetEndDate = new Date(body.targetEndDate);
+  if (body.currentEndDate !== undefined) update.currentEndDate = body.currentEndDate ? new Date(body.currentEndDate) : null;
   if (body.color) update.color = body.color;
   if (body.leads) update.leads = body.leads;
   if (body.roadmapIds) update.roadmapIds = body.roadmapIds;

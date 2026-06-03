@@ -12,7 +12,7 @@ interface ProjectRow {
   statusId: string;
   plannedStart: string;
   plannedEnd: string;
-  targetEndDate?: string;
+  currentEndDate?: string | null;
   leads: string[];
   roadmapIds: string[];
   milestoneCount: number;

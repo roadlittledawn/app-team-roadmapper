@@ -52,7 +52,6 @@ export async function POST(
   const existingCount = await Project.countDocuments({ roadmapIds: roadmapId });
   const autoColor = PROJECT_PALETTE[existingCount % PROJECT_PALETTE.length];
 
-  const plannedEnd = new Date(body.plannedEnd);
   const project = await Project.create({
     title: body.title.trim(),
     description: body.description || "",
@@ -61,8 +60,8 @@ export async function POST(
     color: body.color || autoColor,
     statusId: body.statusId,
     plannedStart: new Date(body.plannedStart),
-    plannedEnd,
-    targetEndDate: body.targetEndDate ? new Date(body.targetEndDate) : plannedEnd,
+    plannedEnd: new Date(body.plannedEnd),
+    currentEndDate: body.currentEndDate ? new Date(body.currentEndDate) : null,
     leads: body.leads || [],
     roadmapIds: body.roadmapIds || [roadmapId],
     teamId,

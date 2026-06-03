@@ -37,17 +37,20 @@ function findStatusId(statuses: StatusInfo[], label: string): string | null {
   return status ? status._id.toString() : null;
 }
 
-export function computeProjectedEnd(
-  targetEndDate: Date,
-  milestones: Pick<IMilestone, "plannedEnd">[]
+export function computeEffectiveEnd(
+  plannedEnd: Date,
+  milestones: Pick<IMilestone, "plannedEnd">[],
+  currentEndDate?: Date | null
 ): Date {
-  if (milestones.length === 0) return targetEndDate;
+  if (milestones.length === 0) {
+    return currentEndDate && currentEndDate > new Date(plannedEnd) ? currentEndDate : new Date(plannedEnd);
+  }
 
   const latestMilestoneEnd = milestones.reduce((latest, m) => {
     const end = new Date(m.plannedEnd);
     return end > latest ? end : latest;
   }, new Date(0));
 
-  const target = new Date(targetEndDate);
-  return latestMilestoneEnd > target ? latestMilestoneEnd : target;
+  const planned = new Date(plannedEnd);
+  return latestMilestoneEnd > planned ? latestMilestoneEnd : planned;
 }

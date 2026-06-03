@@ -10,7 +10,7 @@ export interface IProject extends Document {
   statusOverride: mongoose.Types.ObjectId | null;
   plannedStart: Date;
   plannedEnd: Date;
-  targetEndDate: Date;
+  currentEndDate: Date | null;
   leads: string[];
   roadmapIds: mongoose.Types.ObjectId[];
   teamId: mongoose.Types.ObjectId;
@@ -36,7 +36,7 @@ const ProjectSchema = new Schema<IProject>(
     statusOverride: { type: Schema.Types.ObjectId, ref: "ProjectStatus", default: null },
     plannedStart: { type: Date, required: true },
     plannedEnd: { type: Date, required: true },
-    targetEndDate: { type: Date, required: true },
+    currentEndDate: { type: Date, default: null },
     leads: [{ type: String }],
     roadmapIds: [{ type: Schema.Types.ObjectId, ref: "Roadmap", required: true }],
     teamId: { type: Schema.Types.ObjectId, ref: "TeamSpace", required: true },
