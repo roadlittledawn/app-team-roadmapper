@@ -7,6 +7,8 @@ import { Modal } from "@/components/ui/modal";
 import { GanttChart } from "@/components/gantt-chart";
 import { CapacityOverview } from "@/components/capacity-overview";
 import { MilestoneManager } from "@/components/milestone-manager";
+import { MarkdownContent } from "@/components/markdown-content";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import { ArrowLeft, Maximize2, Minimize2, Pencil, Plus } from "lucide-react";
 
 const PROJECT_PALETTE = [
@@ -727,11 +729,7 @@ function ProjectDetail({
   if (!editing) {
     return (
       <div className="border border-t-0 border-border rounded-b-md p-4 space-y-4 bg-accent/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: project.color }} />
-            <h3 className="font-semibold">{project.title}</h3>
-          </div>
+        <div className="flex items-center justify-end">
           <Button variant="ghost-accent" size="sm" onClick={() => setEditing(true)}>
             <Pencil /> Edit
           </Button>
@@ -773,7 +771,7 @@ function ProjectDetail({
         <div className="text-sm">
           <span className="text-xs text-muted-foreground block mb-1">Description</span>
           {project.description ? (
-            <p className="whitespace-pre-wrap">{project.description}</p>
+            <MarkdownContent content={project.description} />
           ) : (
             <p className="text-muted-foreground italic">No description</p>
           )}
@@ -848,12 +846,14 @@ function ProjectDetail({
       </div>
       <div>
         <label className="text-sm font-medium">Description</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="mt-1 input-field resize-y"
-        />
+        <div className="mt-1">
+          <MarkdownEditor
+            value={description}
+            onChange={setDescription}
+            placeholder="Supports Markdown formatting"
+            rows={5}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
