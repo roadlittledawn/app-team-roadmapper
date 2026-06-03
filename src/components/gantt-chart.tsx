@@ -336,6 +336,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                       <div
                         className="absolute top-0 w-0.5 h-full bg-primary"
                         style={{ left: `${getPosition(today)}%` }}
+                        title="Today"
                       />
                     )}
                   </div>
@@ -390,6 +391,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                             <div
                               className="absolute top-0 w-0.5 h-full bg-primary"
                               style={{ left: `${getPosition(today)}%` }}
+                              title="Today"
                             />
                           )}
                         </div>
