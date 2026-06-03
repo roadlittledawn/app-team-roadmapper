@@ -268,21 +268,23 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
             return (
               <div key={project._id}>
                 {/* Project row */}
-                <div className={`flex items-center h-10 transition-colors ${isHighlighted ? "bg-primary/20 ring-1 ring-primary/50 rounded" : ""}`}>
+                <div className={`flex items-center min-h-10 py-1 transition-colors ${isHighlighted ? "bg-primary/20 ring-1 ring-primary/50 rounded" : ""}`}>
                   <Popover content={popoverContent} delay={600} position="top">
                     <div
-                      className={`w-48 shrink-0 text-sm truncate pr-2 ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
+                      className={`w-48 shrink-0 flex items-start gap-0.5 pr-2 text-sm leading-snug ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
                       onClick={() => hasMilestones && toggleExpand(project._id)}
                     >
-                      {hasMilestones && (
-                        <span className="inline-block w-4 text-xs text-muted-foreground">
+                      {hasMilestones ? (
+                        <span className="w-4 shrink-0 text-xs text-muted-foreground pt-0.5">
                           {isExpanded ? "▼" : "▶"}
                         </span>
+                      ) : (
+                        <span className="w-4 shrink-0" />
                       )}
-                      {project.title}
+                      <span className="min-w-0">{project.title}</span>
                     </div>
                   </Popover>
-                  <div className="flex-1 relative h-8">
+                  <div className="flex-1 relative min-h-8 self-stretch">
                     {/* Current week highlight */}
                     {currentWeekLeft >= 0 && (
                       <div
@@ -303,7 +305,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                     {/* Planned bar (original commitment) */}
                     <Popover content={popoverContent} delay={600} position="top">
                       <div
-                        className={`absolute top-2 h-4 ${hasOverage ? "rounded-l-sm" : "rounded-sm"} ${hasMilestones ? "cursor-pointer" : "cursor-default"}`}
+                        className={`absolute top-1/2 -translate-y-1/2 h-4 ${hasOverage ? "rounded-l-sm" : "rounded-sm"} ${hasMilestones ? "cursor-pointer" : "cursor-default"}`}
                         style={{
                           left: `${barLeft}%`,
                           width: `${barWidth}%`,
@@ -315,7 +317,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                     {/* Overage extension (striped) — beyond original planned end */}
                     {hasOverage && overageWidth > 0 && (
                       <div
-                        className="absolute top-2 h-4 rounded-r-sm"
+                        className="absolute top-1/2 -translate-y-1/2 h-4 rounded-r-sm"
                         style={{
                           left: `${barRight}%`,
                           width: `${overageWidth}%`,
@@ -332,12 +334,12 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                     )}
                     {/* Clipping indicators */}
                     {milestonesBefore > 0 && (
-                      <div className="absolute top-2.5 left-0 text-[10px] text-muted-foreground">
+                      <div className="absolute top-1/2 -translate-y-1/2 left-0 text-[10px] text-muted-foreground">
                         ← {milestonesBefore} before
                       </div>
                     )}
                     {milestonesAfter > 0 && (
-                      <div className="absolute top-2.5 right-0 text-[10px] text-muted-foreground">
+                      <div className="absolute top-1/2 -translate-y-1/2 right-0 text-[10px] text-muted-foreground">
                         {milestonesAfter} after →
                       </div>
                     )}
@@ -368,11 +370,11 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                     const milestoneColor = lightenColor(barColor, 0.25);
 
                     return (
-                      <div key={milestone._id} className="flex items-center h-8">
-                        <div className="w-48 shrink-0 text-xs truncate pr-2 pl-6 text-muted-foreground">
+                      <div key={milestone._id} className="flex items-center min-h-8 py-0.5">
+                        <div className="w-48 shrink-0 text-xs pr-2 pl-6 leading-snug text-muted-foreground">
                           {milestone.title}
                         </div>
-                        <div className="flex-1 relative h-6">
+                        <div className="flex-1 relative min-h-6 self-stretch">
                           {currentWeekLeft >= 0 && (
                             <div
                               className="absolute top-0 h-full bg-primary/10"
@@ -389,7 +391,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                             ) : null
                           )}
                           <div
-                            className="absolute top-1.5 h-3 rounded-sm"
+                            className="absolute top-1/2 -translate-y-1/2 h-3 rounded-sm"
                             style={{
                               left: `${mLeft}%`,
                               width: `${mWidth}%`,
