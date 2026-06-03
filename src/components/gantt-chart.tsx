@@ -165,6 +165,16 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
 
   const weekPositions = weeks.map((week) => getPosition(week));
 
+  const currentWeekIdx = weeks.findIndex((w, i) => {
+    const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+    return today >= w && today < nextWeek;
+  });
+  const currentWeekLeft = currentWeekIdx >= 0 ? weekPositions[currentWeekIdx] : -1;
+  const currentWeekRight = currentWeekIdx >= 0
+    ? (currentWeekIdx < weeks.length - 1 ? weekPositions[currentWeekIdx + 1] : 100)
+    : -1;
+  const currentWeekWidth = currentWeekRight - currentWeekLeft;
+
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[600px]">
@@ -174,6 +184,12 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
             Project
           </div>
           <div className="flex-1 relative">
+            {currentWeekLeft >= 0 && (
+              <div
+                className="absolute top-0 h-full bg-primary/5 rounded-sm"
+                style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
+              />
+            )}
             {weeks.map((week, i) => {
               const left = weekPositions[i];
               if (left <= 0) return null;
@@ -257,6 +273,13 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                     </div>
                   </Popover>
                   <div className="flex-1 relative h-8">
+                    {/* Current week highlight */}
+                    {currentWeekLeft >= 0 && (
+                      <div
+                        className="absolute top-0 h-full bg-primary/5"
+                        style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
+                      />
+                    )}
                     {/* Week grid lines */}
                     {weekPositions.map((pos, i) =>
                       pos > 0 ? (
@@ -339,6 +362,12 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                           {milestone.title}
                         </div>
                         <div className="flex-1 relative h-6">
+                          {currentWeekLeft >= 0 && (
+                            <div
+                              className="absolute top-0 h-full bg-primary/5"
+                              style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
+                            />
+                          )}
                           {weekPositions.map((pos, i) =>
                             pos > 0 ? (
                               <div
