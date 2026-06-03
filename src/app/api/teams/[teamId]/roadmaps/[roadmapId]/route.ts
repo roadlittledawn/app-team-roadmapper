@@ -29,7 +29,7 @@ export async function GET(
     return NextResponse.json({ error: "Roadmap not found" }, { status: 404 });
   }
 
-  const projects = await Project.find({ roadmapId }).sort({ plannedStart: 1 }).lean();
+  const projects = await Project.find({ roadmapIds: roadmapId }).sort({ plannedStart: 1 }).lean();
 
   return NextResponse.json({ roadmap, projects });
 }
