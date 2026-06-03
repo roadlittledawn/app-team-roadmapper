@@ -34,6 +34,15 @@ interface ProjectLink {
   url: string;
 }
 
+interface Milestone {
+  _id: string;
+  title: string;
+  plannedStart: string;
+  plannedEnd: string;
+  statusId: string;
+  assignee: string;
+}
+
 interface Project {
   _id: string;
   title: string;
@@ -43,7 +52,9 @@ interface Project {
   color: string;
   plannedStart: string;
   plannedEnd: string;
+  targetEndDate?: string;
   statusId: string;
+  statusOverride?: string | null;
   leads: string[];
   links: ProjectLink[];
 }
@@ -84,6 +95,7 @@ export default function RoadmapDetailPage() {
   const [rmBudget, setRmBudget] = useState("");
   const [rmStatus, setRmStatus] = useState<"active" | "archived">("active");
   const [rmSaving, setRmSaving] = useState(false);
+  const [projectMilestones, setProjectMilestones] = useState<Record<string, Milestone[]>>({});
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectTitle, setProjectTitle] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
@@ -131,6 +143,18 @@ export default function RoadmapDetailPage() {
 
   function getStatus(statusId: string) {
     return statuses.find((s) => s._id === statusId) || { label: "Unknown", color: "#6b7280" };
+  }
+
+  async function fetchMilestones(projectId: string) {
+    if (projectMilestones[projectId]) return;
+    const res = await fetch(
+      `/api/teams/${teamId}/roadmaps/${roadmapId}/projects/${projectId}/milestones`,
+      { cache: "no-store" }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      setProjectMilestones((prev) => ({ ...prev, [projectId]: data.milestones }));
+    }
   }
 
   async function handleAddProject(e: React.FormEvent) {
@@ -233,15 +257,30 @@ export default function RoadmapDetailPage() {
 
   const ganttProjects = projects.map((p) => {
     const status = getStatus(p.statusId);
+    const milestones = projectMilestones[p._id];
     return {
       _id: p._id,
       title: p.title,
       plannedStart: p.plannedStart,
       plannedEnd: p.plannedEnd,
+      targetEndDate: p.targetEndDate,
       statusColor: p.color || status.color,
       statusLabel: status.label,
       leads: p.leads,
       links: p.links,
+      color: p.color,
+      milestones: milestones?.map((m) => {
+        const mStatus = getStatus(m.statusId);
+        return {
+          _id: m._id,
+          title: m.title,
+          plannedStart: m.plannedStart,
+          plannedEnd: m.plannedEnd,
+          statusLabel: mStatus.label,
+          statusColor: mStatus.color,
+          assignee: m.assignee,
+        };
+      }),
     };
   });
 
@@ -371,6 +410,7 @@ export default function RoadmapDetailPage() {
               projects={ganttProjects}
               startDate={roadmap.startDate}
               endDate={roadmap.endDate}
+              onExpandProject={fetchMilestones}
             />
           </div>
 
