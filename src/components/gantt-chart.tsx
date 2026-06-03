@@ -139,7 +139,10 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const weeks = getWeeksBetween(start, end);
-  const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+  const chartEnd = weeks.length > 0
+    ? new Date(weeks[weeks.length - 1].getTime() + 7 * 24 * 60 * 60 * 1000)
+    : end;
+  const totalDays = (chartEnd.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
   if (weeks.length === 0 || totalDays <= 0) {
     return <p className="text-sm text-muted-foreground">Invalid date range for Gantt chart.</p>;
