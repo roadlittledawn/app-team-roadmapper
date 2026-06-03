@@ -186,13 +186,13 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
           <div className="flex-1 relative">
             {currentWeekLeft >= 0 && (
               <div
-                className="absolute top-0 h-full bg-primary/5 rounded-sm"
+                className="absolute top-0 h-full bg-primary/10 rounded-sm"
                 style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
               />
             )}
             {weeks.map((week, i) => {
               const left = weekPositions[i];
-              if (left <= 0) return null;
+              if (left < 0) return null;
               return (
                 <div
                   key={i}
@@ -276,13 +276,13 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                     {/* Current week highlight */}
                     {currentWeekLeft >= 0 && (
                       <div
-                        className="absolute top-0 h-full bg-primary/5"
+                        className="absolute top-0 h-full bg-primary/10"
                         style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
                       />
                     )}
                     {/* Week grid lines */}
                     {weekPositions.map((pos, i) =>
-                      pos > 0 ? (
+                      pos >= 0 ? (
                         <div
                           key={i}
                           className="absolute top-0 h-full border-l border-border/30"
@@ -364,12 +364,12 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                         <div className="flex-1 relative h-6">
                           {currentWeekLeft >= 0 && (
                             <div
-                              className="absolute top-0 h-full bg-primary/5"
+                              className="absolute top-0 h-full bg-primary/10"
                               style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
                             />
                           )}
                           {weekPositions.map((pos, i) =>
-                            pos > 0 ? (
+                            pos >= 0 ? (
                               <div
                                 key={i}
                                 className="absolute top-0 h-full border-l border-border/20"
