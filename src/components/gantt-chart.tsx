@@ -331,7 +331,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                     const mLeft = getPosition(mStart < start ? start : mStart);
                     const mRight = getPosition(mEnd > end ? end : mEnd);
                     const mWidth = Math.max(mRight - mLeft, 0.5);
-                    const milestoneColor = lightenColor(barColor, 0.4);
+                    const milestoneColor = lightenColor(barColor, 0.25);
 
                     return (
                       <div key={milestone._id} className="flex items-center h-8">
