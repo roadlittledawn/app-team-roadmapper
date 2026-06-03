@@ -389,7 +389,12 @@ export default function TeamDetailPage() {
 
         <section>
           <div className="flex items-center justify-between pb-2 border-b border-border mb-4">
-            <h2 className="text-lg font-semibold">Roadmaps</h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-semibold">Roadmaps</h2>
+              <Button variant="ghost-accent" size="sm" onClick={() => router.push(`/teams/${teamId}/projects`)}>
+                All Projects
+              </Button>
+            </div>
             {!showRoadmapForm && (
               <Button onClick={() => setShowRoadmapForm(true)}>
                 <Plus /> New Roadmap
