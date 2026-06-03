@@ -1,0 +1,31 @@
+id: hshbnx
+name: nested-projects
+source: interactive
+created: 2026-06-03
+current: 01-nested-projects
+
+phase: spec
+step: spec_review
+
+progress:
+  total_items: 1
+  specs_completed: 0
+  specs_pending: 1
+  plans_completed: 0
+  plans_pending: 1
+  implemented: 0
+  reviewed: 0
+
+items:
+  - id: 01-nested-projects
+    change_id: nested-projects-1
+    title: Nested Projects
+    type: feature
+    location: changes/2026/06/03/hshbnx-nested-projects/01-nested-projects
+    context_sections: []
+    depends_on: []
+    spec_status: ready_for_review
+    plan_status: pending
+    impl_status: pending
+    review_status: pending
+    substep: null
