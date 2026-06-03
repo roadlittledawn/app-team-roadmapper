@@ -29,6 +29,7 @@ interface GanttProject {
   leads?: string[];
   links?: GanttProjectLink[];
   milestones?: GanttMilestone[];
+  hasMilestones?: boolean;
   color?: string;
 }
 
@@ -200,7 +201,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
             const targetEnd = project.targetEndDate ? parseLocalDate(project.targetEndDate) : projEnd;
             const hasOverage = projEnd > targetEnd;
             const isExpanded = expandedIds.has(project._id);
-            const hasMilestones = (project.milestones?.length ?? 0) > 0;
+            const hasMilestones = project.hasMilestones || (project.milestones?.length ?? 0) > 0;
             const barColor = project.color || project.statusColor;
 
             const startWeekIdx = weeks.findIndex((w, i) => {

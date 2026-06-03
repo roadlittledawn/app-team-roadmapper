@@ -58,6 +58,7 @@ interface Project {
   statusOverride?: string | null;
   leads: string[];
   links: ProjectLink[];
+  milestoneCount?: number;
 }
 
 interface Status {
@@ -258,7 +259,8 @@ export default function RoadmapDetailPage() {
 
   const ganttProjects = projects.map((p) => {
     const status = getStatus(p.statusId);
-    const milestones = projectMilestones[p._id];
+    const loadedMilestones = projectMilestones[p._id];
+    const hasMilestones = (p.milestoneCount ?? 0) > 0 || (loadedMilestones && loadedMilestones.length > 0);
     return {
       _id: p._id,
       title: p.title,
@@ -270,7 +272,8 @@ export default function RoadmapDetailPage() {
       leads: p.leads,
       links: p.links,
       color: p.color,
-      milestones: milestones?.map((m) => {
+      hasMilestones,
+      milestones: loadedMilestones?.map((m) => {
         const mStatus = getStatus(m.statusId);
         return {
           _id: m._id,

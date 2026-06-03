@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { TeamSpace } from "@/models/team-space";
 import { Roadmap } from "@/models/roadmap";
 import { Project } from "@/models/project";
+import { Milestone } from "@/models/milestone";
 
 async function verifyTeamOwnership(teamId: string, userId: string) {
   const team = await TeamSpace.findOne({ _id: teamId, userId }).lean();
@@ -31,7 +32,20 @@ export async function GET(
 
   const projects = await Project.find({ roadmapIds: roadmapId }).sort({ plannedStart: 1 }).lean();
 
-  return NextResponse.json({ roadmap, projects });
+  const projectIds = projects.map((p) => p._id);
+  const milestones = await Milestone.find({ projectId: { $in: projectIds } }).lean();
+  const milestoneCounts: Record<string, number> = {};
+  for (const m of milestones) {
+    const pid = m.projectId.toString();
+    milestoneCounts[pid] = (milestoneCounts[pid] || 0) + 1;
+  }
+
+  const projectsWithCounts = projects.map((p) => ({
+    ...p,
+    milestoneCount: milestoneCounts[p._id.toString()] || 0,
+  }));
+
+  return NextResponse.json({ roadmap, projects: projectsWithCounts });
 }
 
 export async function PUT(
