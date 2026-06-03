@@ -264,7 +264,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
             return (
               <div key={project._id}>
                 {/* Project row */}
-                <div className={`flex items-center h-10 transition-colors ${isHighlighted ? "bg-accent/40 rounded" : ""}`}>
+                <div className={`flex items-center h-10 transition-colors ${isHighlighted ? "bg-primary/20 ring-1 ring-primary/50 rounded" : ""}`}>
                   <Popover content={popoverContent} delay={600} position="top">
                     <div
                       className={`w-48 shrink-0 text-sm truncate pr-2 ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
