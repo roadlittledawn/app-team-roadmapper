@@ -99,6 +99,7 @@ export default function RoadmapDetailPage() {
   const [rmBudget, setRmBudget] = useState("");
   const [rmStatus, setRmStatus] = useState<"active" | "archived">("active");
   const [rmSaving, setRmSaving] = useState(false);
+  const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
   const [projectMilestones, setProjectMilestones] = useState<Record<string, Milestone[]>>({});
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectTitle, setProjectTitle] = useState("");
@@ -417,6 +418,7 @@ export default function RoadmapDetailPage() {
               startDate={roadmap.startDate}
               endDate={roadmap.endDate}
               onExpandProject={fetchMilestones}
+              highlightedId={hoveredProjectId}
             />
           </div>
 
@@ -598,6 +600,8 @@ export default function RoadmapDetailPage() {
                           isSelected ? "border-ring bg-accent/50" : "border-border hover:bg-accent/30"
                         }`}
                         onClick={() => setSelectedProjectId(isSelected ? null : project._id)}
+                        onMouseEnter={() => setHoveredProjectId(project._id)}
+                        onMouseLeave={() => setHoveredProjectId(null)}
                       >
                         <div className="flex items-center gap-3">
                           <span

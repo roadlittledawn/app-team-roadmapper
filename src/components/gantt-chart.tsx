@@ -38,6 +38,7 @@ interface GanttChartProps {
   startDate: string;
   endDate: string;
   onExpandProject?: (projectId: string) => void;
+  highlightedId?: string | null;
 }
 
 function parseLocalDate(dateStr: string): Date {
@@ -132,7 +133,7 @@ function ProjectPopoverContent({ project }: { project: GanttProject }) {
   );
 }
 
-export function GanttChart({ projects, startDate, endDate, onExpandProject }: GanttChartProps) {
+export function GanttChart({ projects, startDate, endDate, onExpandProject, highlightedId }: GanttChartProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const start = parseLocalDate(startDate);
   const end = parseLocalDate(endDate);
@@ -258,10 +259,12 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
 
             const popoverContent = <ProjectPopoverContent project={project} />;
 
+            const isHighlighted = highlightedId === project._id;
+
             return (
               <div key={project._id}>
                 {/* Project row */}
-                <div className="flex items-center h-10">
+                <div className={`flex items-center h-10 transition-colors ${isHighlighted ? "bg-accent/40 rounded" : ""}`}>
                   <Popover content={popoverContent} delay={600} position="top">
                     <div
                       className={`w-48 shrink-0 text-sm truncate pr-2 ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
