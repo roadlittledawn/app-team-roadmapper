@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Popover } from "@/components/ui/popover";
 
 interface GanttProjectLink {
@@ -7,21 +8,36 @@ interface GanttProjectLink {
   url: string;
 }
 
+interface GanttMilestone {
+  _id: string;
+  title: string;
+  plannedStart: string;
+  plannedEnd: string;
+  statusLabel: string;
+  statusColor: string;
+  assignee?: string;
+}
+
 interface GanttProject {
   _id: string;
   title: string;
   plannedStart: string;
   plannedEnd: string;
+  targetEndDate?: string;
   statusColor: string;
   statusLabel: string;
   leads?: string[];
   links?: GanttProjectLink[];
+  milestones?: GanttMilestone[];
+  hasMilestones?: boolean;
+  color?: string;
 }
 
 interface GanttChartProps {
   projects: GanttProject[];
   startDate: string;
   endDate: string;
+  onExpandProject?: (projectId: string) => void;
 }
 
 function parseLocalDate(dateStr: string): Date {
@@ -50,7 +66,16 @@ function formatWeekLabel(date: Date): string {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
+function lightenColor(hex: string, amount: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const r = Math.min(255, (num >> 16) + Math.round((255 - (num >> 16)) * amount));
+  const g = Math.min(255, ((num >> 8) & 0x00ff) + Math.round((255 - ((num >> 8) & 0x00ff)) * amount));
+  const b = Math.min(255, (num & 0x0000ff) + Math.round((255 - (num & 0x0000ff)) * amount));
+  return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, "0")}`;
+}
+
 function ProjectPopoverContent({ project }: { project: GanttProject }) {
+  const milestoneCount = project.milestones?.length ?? 0;
   return (
     <div className="space-y-2">
       <div className="font-medium leading-snug">{project.title}</div>
@@ -74,6 +99,12 @@ function ProjectPopoverContent({ project }: { project: GanttProject }) {
           <span className="text-muted-foreground">End</span>
           <div className="mt-0.5">{formatDate(project.plannedEnd)}</div>
         </div>
+        {milestoneCount > 0 && (
+          <div className="col-span-2">
+            <span className="text-muted-foreground">Milestones</span>
+            <div className="mt-0.5">{milestoneCount} milestone{milestoneCount !== 1 ? "s" : ""}</div>
+          </div>
+        )}
       </div>
       {project.links && project.links.length > 0 && (
         <div className="text-xs pt-1 border-t border-border/50">
@@ -101,13 +132,17 @@ function ProjectPopoverContent({ project }: { project: GanttProject }) {
   );
 }
 
-export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
+export function GanttChart({ projects, startDate, endDate, onExpandProject }: GanttChartProps) {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const start = parseLocalDate(startDate);
   const end = parseLocalDate(endDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const weeks = getWeeksBetween(start, end);
-  const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+  const chartEnd = weeks.length > 0
+    ? new Date(weeks[weeks.length - 1].getTime() + 7 * 24 * 60 * 60 * 1000)
+    : end;
+  const totalDays = (chartEnd.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
   if (weeks.length === 0 || totalDays <= 0) {
     return <p className="text-sm text-muted-foreground">Invalid date range for Gantt chart.</p>;
@@ -118,15 +153,30 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
     return Math.max(0, Math.min(100, (days / totalDays) * 100));
   }
 
-  function isOverrun(project: GanttProject): boolean {
-    const plannedEnd = parseLocalDate(project.plannedEnd);
-    const doneStatuses = ["done", "complete", "completed"];
-    return (
-      today > plannedEnd && !doneStatuses.includes(project.statusLabel.toLowerCase())
-    );
+  function toggleExpand(projectId: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) {
+        next.delete(projectId);
+      } else {
+        next.add(projectId);
+        onExpandProject?.(projectId);
+      }
+      return next;
+    });
   }
 
   const weekPositions = weeks.map((week) => getPosition(week));
+
+  const currentWeekIdx = weeks.findIndex((w, i) => {
+    const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+    return today >= w && today < nextWeek;
+  });
+  const currentWeekLeft = currentWeekIdx >= 0 ? weekPositions[currentWeekIdx] : -1;
+  const currentWeekRight = currentWeekIdx >= 0
+    ? (currentWeekIdx < weeks.length - 1 ? weekPositions[currentWeekIdx + 1] : 100)
+    : -1;
+  const currentWeekWidth = currentWeekRight - currentWeekLeft;
 
   return (
     <div className="overflow-x-auto">
@@ -137,9 +187,15 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
             Project
           </div>
           <div className="flex-1 relative">
+            {currentWeekLeft >= 0 && (
+              <div
+                className="absolute top-0 h-full bg-primary/10 rounded-sm"
+                style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
+              />
+            )}
             {weeks.map((week, i) => {
               const left = weekPositions[i];
-              if (left <= 0) return null;
+              if (left < 0) return null;
               return (
                 <div
                   key={i}
@@ -161,6 +217,11 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
           projects.map((project) => {
             const projStart = parseLocalDate(project.plannedStart);
             const projEnd = parseLocalDate(project.plannedEnd);
+            const targetEnd = project.targetEndDate ? parseLocalDate(project.targetEndDate) : projEnd;
+            const hasOverage = projEnd > targetEnd;
+            const isExpanded = expandedIds.has(project._id);
+            const hasMilestones = project.hasMilestones || (project.milestones?.length ?? 0) > 0;
+            const barColor = project.color || project.statusColor;
 
             const startWeekIdx = weeks.findIndex((w, i) => {
               const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
@@ -172,65 +233,174 @@ export function GanttChart({ projects, startDate, endDate }: GanttChartProps) {
             });
 
             const barLeft = startWeekIdx >= 0 ? weekPositions[startWeekIdx] : getPosition(projStart);
-            const barRight = endWeekIdx >= 0
+            const targetBarRight = hasOverage
+              ? getPosition(targetEnd)
+              : (endWeekIdx >= 0
+                ? (endWeekIdx < weeks.length - 1 ? weekPositions[endWeekIdx + 1] : 100)
+                : getPosition(projEnd));
+            const fullBarRight = endWeekIdx >= 0
               ? (endWeekIdx < weeks.length - 1 ? weekPositions[endWeekIdx + 1] : 100)
               : getPosition(projEnd);
-            const barWidth = Math.max(barRight - barLeft, 1);
-            const overrun = isOverrun(project);
-            const overrunRight = overrun ? getPosition(today) : barRight;
-            const overrunWidth = overrunRight - barRight;
+            const barWidth = Math.max(targetBarRight - barLeft, 1);
+            const overageWidth = hasOverage ? Math.max(fullBarRight - targetBarRight, 0) : 0;
+
+            // Clipping indicators for milestones
+            let milestonesBefore = 0;
+            let milestonesAfter = 0;
+            if (project.milestones) {
+              for (const m of project.milestones) {
+                const mEnd = parseLocalDate(m.plannedEnd);
+                const mStart = parseLocalDate(m.plannedStart);
+                if (mEnd < start) milestonesBefore++;
+                else if (mStart > end) milestonesAfter++;
+              }
+            }
 
             const popoverContent = <ProjectPopoverContent project={project} />;
 
             return (
-              <div key={project._id} className="flex items-center h-10">
-                <Popover content={popoverContent}>
-                  <div className="w-48 shrink-0 text-sm truncate pr-2 cursor-default">
-                    {project.title}
-                  </div>
-                </Popover>
-                <div className="flex-1 relative h-8">
-                  {/* Week grid lines */}
-                  {weekPositions.map((pos, i) =>
-                    pos > 0 ? (
-                      <div
-                        key={i}
-                        className="absolute top-0 h-full border-l border-border/30"
-                        style={{ left: `${pos}%` }}
-                      />
-                    ) : null
-                  )}
-                  {/* Planned bar */}
+              <div key={project._id}>
+                {/* Project row */}
+                <div className="flex items-center h-10">
                   <Popover content={popoverContent}>
                     <div
-                      className="absolute top-2 h-4 rounded-sm cursor-default"
-                      style={{
-                        left: `${barLeft}%`,
-                        width: `${barWidth}%`,
-                        backgroundColor: project.statusColor,
-                      }}
-                    />
+                      className={`w-48 shrink-0 text-sm truncate pr-2 ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
+                      onClick={() => hasMilestones && toggleExpand(project._id)}
+                    >
+                      {hasMilestones && (
+                        <span className="inline-block w-4 text-xs text-muted-foreground">
+                          {isExpanded ? "▼" : "▶"}
+                        </span>
+                      )}
+                      {project.title}
+                    </div>
                   </Popover>
-                  {/* Overrun extension */}
-                  {overrun && overrunWidth > 0 && (
-                    <div
-                      className="absolute top-2 h-4 rounded-r-sm"
-                      style={{
-                        left: `${barRight}%`,
-                        width: `${overrunWidth}%`,
-                        backgroundColor: project.statusColor,
-                        opacity: 0.4,
-                      }}
-                    />
-                  )}
-                  {/* Today marker */}
-                  {today >= start && today <= end && (
-                    <div
-                      className="absolute top-0 w-0.5 h-full bg-primary"
-                      style={{ left: `${getPosition(today)}%` }}
-                    />
-                  )}
+                  <div className="flex-1 relative h-8">
+                    {/* Current week highlight */}
+                    {currentWeekLeft >= 0 && (
+                      <div
+                        className="absolute top-0 h-full bg-primary/10"
+                        style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
+                      />
+                    )}
+                    {/* Week grid lines */}
+                    {weekPositions.map((pos, i) =>
+                      pos >= 0 ? (
+                        <div
+                          key={i}
+                          className="absolute top-0 h-full border-l border-border/30"
+                          style={{ left: `${pos}%` }}
+                        />
+                      ) : null
+                    )}
+                    {/* Planned bar (up to target end) */}
+                    <Popover content={popoverContent}>
+                      <div
+                        className={`absolute top-2 h-4 ${hasOverage ? "rounded-l-sm" : "rounded-sm"} ${hasMilestones ? "cursor-pointer" : "cursor-default"}`}
+                        style={{
+                          left: `${barLeft}%`,
+                          width: `${barWidth}%`,
+                          backgroundColor: barColor,
+                        }}
+                        onClick={() => hasMilestones && toggleExpand(project._id)}
+                      />
+                    </Popover>
+                    {/* Overage extension (striped) */}
+                    {hasOverage && overageWidth > 0 && (
+                      <div
+                        className="absolute top-2 h-4 rounded-r-sm"
+                        style={{
+                          left: `${targetBarRight}%`,
+                          width: `${overageWidth}%`,
+                          backgroundImage: `repeating-linear-gradient(
+                            -45deg,
+                            ${barColor},
+                            ${barColor} 2px,
+                            transparent 2px,
+                            transparent 6px
+                          )`,
+                          opacity: 0.7,
+                        }}
+                      />
+                    )}
+                    {/* Clipping indicators */}
+                    {milestonesBefore > 0 && (
+                      <div className="absolute top-2.5 left-0 text-[10px] text-muted-foreground">
+                        ← {milestonesBefore} before
+                      </div>
+                    )}
+                    {milestonesAfter > 0 && (
+                      <div className="absolute top-2.5 right-0 text-[10px] text-muted-foreground">
+                        {milestonesAfter} after →
+                      </div>
+                    )}
+                    {/* Today marker */}
+                    {today >= start && today <= end && (
+                      <div
+                        className="absolute top-0 w-0.5 h-full bg-primary"
+                        style={{ left: `${getPosition(today)}%` }}
+                        title="Today"
+                      />
+                    )}
+                  </div>
                 </div>
+
+                {/* Expanded milestones */}
+                {isExpanded && project.milestones && project.milestones
+                  .filter((m) => {
+                    const mStart = parseLocalDate(m.plannedStart);
+                    const mEnd = parseLocalDate(m.plannedEnd);
+                    return mEnd >= start && mStart <= end;
+                  })
+                  .map((milestone) => {
+                    const mStart = parseLocalDate(milestone.plannedStart);
+                    const mEnd = parseLocalDate(milestone.plannedEnd);
+                    const mLeft = getPosition(mStart < start ? start : mStart);
+                    const mRight = getPosition(mEnd > end ? end : mEnd);
+                    const mWidth = Math.max(mRight - mLeft, 0.5);
+                    const milestoneColor = lightenColor(barColor, 0.25);
+
+                    return (
+                      <div key={milestone._id} className="flex items-center h-8">
+                        <div className="w-48 shrink-0 text-xs truncate pr-2 pl-6 text-muted-foreground">
+                          {milestone.title}
+                        </div>
+                        <div className="flex-1 relative h-6">
+                          {currentWeekLeft >= 0 && (
+                            <div
+                              className="absolute top-0 h-full bg-primary/10"
+                              style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
+                            />
+                          )}
+                          {weekPositions.map((pos, i) =>
+                            pos >= 0 ? (
+                              <div
+                                key={i}
+                                className="absolute top-0 h-full border-l border-border/20"
+                                style={{ left: `${pos}%` }}
+                              />
+                            ) : null
+                          )}
+                          <div
+                            className="absolute top-1.5 h-3 rounded-sm"
+                            style={{
+                              left: `${mLeft}%`,
+                              width: `${mWidth}%`,
+                              backgroundColor: milestoneColor,
+                            }}
+                            title={`${milestone.title} (${milestone.statusLabel})`}
+                          />
+                          {today >= start && today <= end && (
+                            <div
+                              className="absolute top-0 w-0.5 h-full bg-primary"
+                              style={{ left: `${getPosition(today)}%` }}
+                              title="Today"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             );
           })

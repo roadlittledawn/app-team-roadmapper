@@ -25,7 +25,7 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const projects = await Project.find({ roadmapId }).sort({ plannedStart: 1 }).lean();
+  const projects = await Project.find({ roadmapIds: roadmapId }).sort({ plannedStart: 1 }).lean();
   return NextResponse.json({ projects });
 }
 
@@ -49,9 +49,10 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const existingCount = await Project.countDocuments({ roadmapId });
+  const existingCount = await Project.countDocuments({ roadmapIds: roadmapId });
   const autoColor = PROJECT_PALETTE[existingCount % PROJECT_PALETTE.length];
 
+  const plannedEnd = new Date(body.plannedEnd);
   const project = await Project.create({
     title: body.title.trim(),
     description: body.description || "",
@@ -60,11 +61,11 @@ export async function POST(
     color: body.color || autoColor,
     statusId: body.statusId,
     plannedStart: new Date(body.plannedStart),
-    plannedEnd: new Date(body.plannedEnd),
+    plannedEnd,
+    targetEndDate: body.targetEndDate ? new Date(body.targetEndDate) : plannedEnd,
     leads: body.leads || [],
-    roadmapId,
+    roadmapIds: body.roadmapIds || [roadmapId],
     teamId,
-    milestones: body.milestones || [],
     links: body.links || [],
   });
 

@@ -16,7 +16,7 @@ export async function POST(
   const team = await TeamSpace.findOne({ _id: teamId, userId: session.userId }).lean();
   if (!team) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const project = await Project.findOne({ _id: projectId, roadmapId, teamId }).lean();
+  const project = await Project.findOne({ _id: projectId, roadmapIds: roadmapId, teamId }).lean();
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
   await BacklogProject.create({
@@ -26,7 +26,6 @@ export async function POST(
     pointEstimate: project.pointEstimate,
     leads: project.leads,
     teamId: project.teamId,
-    milestones: project.milestones,
   });
 
   await Project.deleteOne({ _id: projectId });

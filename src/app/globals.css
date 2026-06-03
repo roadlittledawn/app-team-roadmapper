@@ -143,4 +143,59 @@
            focus:outline-none focus:ring-2 focus:ring-ring/70 focus:border-ring
            transition-colors;
   }
+
+  .prose-custom {
+    @apply text-sm text-foreground leading-relaxed;
+  }
+  .prose-custom h1 {
+    @apply text-lg font-bold mt-3 mb-1;
+  }
+  .prose-custom h2 {
+    @apply text-base font-semibold mt-3 mb-1;
+  }
+  .prose-custom h3 {
+    @apply text-sm font-semibold mt-2 mb-1;
+  }
+  .prose-custom p {
+    @apply mb-2;
+  }
+  .prose-custom ul {
+    @apply list-disc pl-5 mb-2;
+  }
+  .prose-custom ol {
+    @apply list-decimal pl-5 mb-2;
+  }
+  .prose-custom li {
+    @apply mb-0.5;
+  }
+  .prose-custom code {
+    @apply bg-muted px-1 py-0.5 rounded text-xs font-mono;
+  }
+  .prose-custom pre {
+    @apply bg-muted rounded-md p-3 mb-2 overflow-x-auto;
+  }
+  .prose-custom pre code {
+    @apply bg-transparent p-0;
+  }
+  .prose-custom blockquote {
+    @apply border-l-2 border-border pl-3 italic text-muted-foreground mb-2;
+  }
+  .prose-custom a {
+    @apply text-primary hover:underline;
+  }
+  .prose-custom hr {
+    @apply border-border my-3;
+  }
+  .prose-custom table {
+    @apply w-full border-collapse mb-2 text-xs;
+  }
+  .prose-custom th {
+    @apply border border-border px-2 py-1 bg-muted font-medium text-left;
+  }
+  .prose-custom td {
+    @apply border border-border px-2 py-1;
+  }
+  .prose-custom strong {
+    @apply font-semibold;
+  }
 }

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { GanttChart } from "@/components/gantt-chart";
 import { CapacityOverview } from "@/components/capacity-overview";
+import { MilestoneManager } from "@/components/milestone-manager";
+import { MarkdownContent } from "@/components/markdown-content";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import { ArrowLeft, Maximize2, Minimize2, Pencil, Plus } from "lucide-react";
 
 const PROJECT_PALETTE = [
@@ -34,6 +37,15 @@ interface ProjectLink {
   url: string;
 }
 
+interface Milestone {
+  _id: string;
+  title: string;
+  plannedStart: string;
+  plannedEnd: string;
+  statusId: string;
+  assignee: string;
+}
+
 interface Project {
   _id: string;
   title: string;
@@ -43,9 +55,12 @@ interface Project {
   color: string;
   plannedStart: string;
   plannedEnd: string;
+  targetEndDate?: string;
   statusId: string;
+  statusOverride?: string | null;
   leads: string[];
   links: ProjectLink[];
+  milestoneCount?: number;
 }
 
 interface Status {
@@ -84,6 +99,7 @@ export default function RoadmapDetailPage() {
   const [rmBudget, setRmBudget] = useState("");
   const [rmStatus, setRmStatus] = useState<"active" | "archived">("active");
   const [rmSaving, setRmSaving] = useState(false);
+  const [projectMilestones, setProjectMilestones] = useState<Record<string, Milestone[]>>({});
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectTitle, setProjectTitle] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
@@ -131,6 +147,18 @@ export default function RoadmapDetailPage() {
 
   function getStatus(statusId: string) {
     return statuses.find((s) => s._id === statusId) || { label: "Unknown", color: "#6b7280" };
+  }
+
+  async function fetchMilestones(projectId: string) {
+    if (projectMilestones[projectId]) return;
+    const res = await fetch(
+      `/api/teams/${teamId}/roadmaps/${roadmapId}/projects/${projectId}/milestones`,
+      { cache: "no-store" }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      setProjectMilestones((prev) => ({ ...prev, [projectId]: data.milestones }));
+    }
   }
 
   async function handleAddProject(e: React.FormEvent) {
@@ -233,15 +261,32 @@ export default function RoadmapDetailPage() {
 
   const ganttProjects = projects.map((p) => {
     const status = getStatus(p.statusId);
+    const loadedMilestones = projectMilestones[p._id];
+    const hasMilestones = (p.milestoneCount ?? 0) > 0 || (loadedMilestones && loadedMilestones.length > 0);
     return {
       _id: p._id,
       title: p.title,
       plannedStart: p.plannedStart,
       plannedEnd: p.plannedEnd,
+      targetEndDate: p.targetEndDate,
       statusColor: p.color || status.color,
       statusLabel: status.label,
       leads: p.leads,
       links: p.links,
+      color: p.color,
+      hasMilestones,
+      milestones: loadedMilestones?.map((m) => {
+        const mStatus = getStatus(m.statusId);
+        return {
+          _id: m._id,
+          title: m.title,
+          plannedStart: m.plannedStart,
+          plannedEnd: m.plannedEnd,
+          statusLabel: mStatus.label,
+          statusColor: mStatus.color,
+          assignee: m.assignee,
+        };
+      }),
     };
   });
 
@@ -371,6 +416,7 @@ export default function RoadmapDetailPage() {
               projects={ganttProjects}
               startDate={roadmap.startDate}
               endDate={roadmap.endDate}
+              onExpandProject={fetchMilestones}
             />
           </div>
 
@@ -683,11 +729,7 @@ function ProjectDetail({
   if (!editing) {
     return (
       <div className="border border-t-0 border-border rounded-b-md p-4 space-y-4 bg-accent/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: project.color }} />
-            <h3 className="font-semibold">{project.title}</h3>
-          </div>
+        <div className="flex items-center justify-end">
           <Button variant="ghost-accent" size="sm" onClick={() => setEditing(true)}>
             <Pencil /> Edit
           </Button>
@@ -729,7 +771,7 @@ function ProjectDetail({
         <div className="text-sm">
           <span className="text-xs text-muted-foreground block mb-1">Description</span>
           {project.description ? (
-            <p className="whitespace-pre-wrap">{project.description}</p>
+            <MarkdownContent content={project.description} />
           ) : (
             <p className="text-muted-foreground italic">No description</p>
           )}
@@ -754,6 +796,17 @@ function ProjectDetail({
           ) : (
             <p className="text-muted-foreground italic">No links</p>
           )}
+        </div>
+
+        <div className="pt-2 border-t border-border/50">
+          <MilestoneManager
+            teamId={teamId}
+            roadmapId={roadmapId}
+            projectId={project._id}
+            statuses={statuses}
+            members={members}
+            onMilestoneChange={onUpdated}
+          />
         </div>
       </div>
     );
@@ -793,12 +846,14 @@ function ProjectDetail({
       </div>
       <div>
         <label className="text-sm font-medium">Description</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="mt-1 input-field resize-y"
-        />
+        <div className="mt-1">
+          <MarkdownEditor
+            value={description}
+            onChange={setDescription}
+            placeholder="Supports Markdown formatting"
+            rows={5}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
