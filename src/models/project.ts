@@ -7,12 +7,13 @@ export interface IProject extends Document {
   pointEstimate: number | null;
   color: string;
   statusId: mongoose.Types.ObjectId;
+  statusOverride: mongoose.Types.ObjectId | null;
   plannedStart: Date;
   plannedEnd: Date;
+  targetEndDate: Date;
   leads: string[];
-  roadmapId: mongoose.Types.ObjectId;
+  roadmapIds: mongoose.Types.ObjectId[];
   teamId: mongoose.Types.ObjectId;
-  milestones: string[];
   links: { label: string; url: string }[];
   createdAt: Date;
   updatedAt: Date;
@@ -32,18 +33,19 @@ const ProjectSchema = new Schema<IProject>(
     pointEstimate: { type: Number, default: null },
     color: { type: String, default: "#3b82f6" },
     statusId: { type: Schema.Types.ObjectId, ref: "ProjectStatus", required: true },
+    statusOverride: { type: Schema.Types.ObjectId, ref: "ProjectStatus", default: null },
     plannedStart: { type: Date, required: true },
     plannedEnd: { type: Date, required: true },
+    targetEndDate: { type: Date, required: true },
     leads: [{ type: String }],
-    roadmapId: { type: Schema.Types.ObjectId, ref: "Roadmap", required: true },
+    roadmapIds: [{ type: Schema.Types.ObjectId, ref: "Roadmap", required: true }],
     teamId: { type: Schema.Types.ObjectId, ref: "TeamSpace", required: true },
-    milestones: [{ type: String }],
     links: [{ label: { type: String, default: "" }, url: { type: String, required: true } }],
   },
   { timestamps: true }
 );
 
-ProjectSchema.index({ roadmapId: 1 });
+ProjectSchema.index({ roadmapIds: 1 });
 ProjectSchema.index({ teamId: 1 });
 
 export const Project =

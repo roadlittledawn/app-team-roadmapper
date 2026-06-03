@@ -5,7 +5,7 @@ created: 2026-06-03
 current: 01-nested-projects
 
 phase: implement
-step: ready
+step: phase-1-complete
 
 progress:
   total_items: 1
@@ -26,6 +26,6 @@ items:
     depends_on: []
     spec_status: approved
     plan_status: approved
-    impl_status: pending
+    impl_status: in_progress
     review_status: pending
     substep: null

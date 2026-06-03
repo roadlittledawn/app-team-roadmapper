@@ -15,7 +15,7 @@ export async function GET(
   const team = await TeamSpace.findOne({ _id: teamId, userId: session.userId }).lean();
   if (!team) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const project = await Project.findOne({ _id: projectId, roadmapId, teamId }).lean();
+  const project = await Project.findOne({ _id: projectId, roadmapIds: roadmapId, teamId }).lean();
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
   return NextResponse.json({ project });
@@ -39,15 +39,17 @@ export async function PUT(
   if (body.size !== undefined) update.size = body.size;
   if (body.pointEstimate !== undefined) update.pointEstimate = body.pointEstimate;
   if (body.statusId) update.statusId = body.statusId;
+  if (body.statusOverride !== undefined) update.statusOverride = body.statusOverride;
   if (body.plannedStart) update.plannedStart = new Date(body.plannedStart);
   if (body.plannedEnd) update.plannedEnd = new Date(body.plannedEnd);
+  if (body.targetEndDate) update.targetEndDate = new Date(body.targetEndDate);
   if (body.color) update.color = body.color;
   if (body.leads) update.leads = body.leads;
-  if (body.milestones) update.milestones = body.milestones;
+  if (body.roadmapIds) update.roadmapIds = body.roadmapIds;
   if (body.links !== undefined) update.links = body.links;
 
   const project = await Project.findOneAndUpdate(
-    { _id: projectId, roadmapId, teamId },
+    { _id: projectId, roadmapIds: roadmapId, teamId },
     update,
     { new: true }
   ).lean();
@@ -68,7 +70,7 @@ export async function DELETE(
   const team = await TeamSpace.findOne({ _id: teamId, userId: session.userId }).lean();
   if (!team) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const result = await Project.deleteOne({ _id: projectId, roadmapId, teamId });
+  const result = await Project.deleteOne({ _id: projectId, roadmapIds: roadmapId, teamId });
   if (result.deletedCount === 0) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }

@@ -32,6 +32,7 @@ export async function POST(
   const backlogProject = await BacklogProject.findOne({ _id: projectId, teamId }).lean();
   if (!backlogProject) return NextResponse.json({ error: "Backlog project not found" }, { status: 404 });
 
+  const plannedEndDate = new Date(plannedEnd);
   const project = await Project.create({
     title: backlogProject.title,
     description: backlogProject.description,
@@ -39,11 +40,11 @@ export async function POST(
     pointEstimate: backlogProject.pointEstimate,
     statusId,
     plannedStart: new Date(plannedStart),
-    plannedEnd: new Date(plannedEnd),
+    plannedEnd: plannedEndDate,
+    targetEndDate: plannedEndDate,
     leads: backlogProject.leads,
-    roadmapId,
+    roadmapIds: [roadmapId],
     teamId,
-    milestones: backlogProject.milestones,
   });
 
   await BacklogProject.deleteOne({ _id: projectId });
