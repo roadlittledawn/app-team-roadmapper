@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { GanttChart } from "@/components/gantt-chart";
 import { CapacityOverview } from "@/components/capacity-overview";
+import { MilestoneManager } from "@/components/milestone-manager";
 import { ArrowLeft, Maximize2, Minimize2, Pencil, Plus } from "lucide-react";
 
 const PROJECT_PALETTE = [
@@ -794,6 +795,17 @@ function ProjectDetail({
           ) : (
             <p className="text-muted-foreground italic">No links</p>
           )}
+        </div>
+
+        <div className="pt-2 border-t border-border/50">
+          <MilestoneManager
+            teamId={teamId}
+            roadmapId={roadmapId}
+            projectId={project._id}
+            statuses={statuses}
+            members={members}
+            onMilestoneChange={onUpdated}
+          />
         </div>
       </div>
     );
