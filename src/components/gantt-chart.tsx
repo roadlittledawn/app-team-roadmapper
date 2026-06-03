@@ -262,7 +262,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
               <div key={project._id}>
                 {/* Project row */}
                 <div className="flex items-center h-10">
-                  <Popover content={popoverContent}>
+                  <Popover content={popoverContent} delay={600} position="top">
                     <div
                       className={`w-48 shrink-0 text-sm truncate pr-2 ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
                       onClick={() => hasMilestones && toggleExpand(project._id)}
@@ -294,7 +294,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject }: Ga
                       ) : null
                     )}
                     {/* Planned bar (up to target end) */}
-                    <Popover content={popoverContent}>
+                    <Popover content={popoverContent} delay={600} position="top">
                       <div
                         className={`absolute top-2 h-4 ${hasOverage ? "rounded-l-sm" : "rounded-sm"} ${hasMilestones ? "cursor-pointer" : "cursor-default"}`}
                         style={{

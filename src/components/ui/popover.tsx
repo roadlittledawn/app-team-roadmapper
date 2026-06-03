@@ -6,9 +6,11 @@ import { createPortal } from "react-dom";
 interface PopoverProps {
   children: React.ReactNode;
   content: React.ReactNode;
+  delay?: number;
+  position?: "auto" | "top" | "bottom";
 }
 
-export function Popover({ children, content }: PopoverProps) {
+export function Popover({ children, content, delay = 300, position: positionProp = "auto" }: PopoverProps) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const [position, setPosition] = useState<"bottom" | "top">("bottom");
@@ -18,7 +20,7 @@ export function Popover({ children, content }: PopoverProps) {
 
   function handleEnter() {
     clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setOpen(true), 300);
+    timeoutRef.current = setTimeout(() => setOpen(true), delay);
   }
 
   function handleLeave() {
@@ -30,14 +32,14 @@ export function Popover({ children, content }: PopoverProps) {
     if (open && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      const showAbove = spaceBelow < 200;
+      const showAbove = positionProp === "top" || (positionProp === "auto" && spaceBelow < 200);
       setPosition(showAbove ? "top" : "bottom");
       setCoords({
         top: showAbove ? rect.top + window.scrollY : rect.bottom + window.scrollY + 6,
         left: rect.left + window.scrollX,
       });
     }
-  }, [open]);
+  }, [open, positionProp]);
 
   useEffect(() => {
     return () => clearTimeout(timeoutRef.current);
