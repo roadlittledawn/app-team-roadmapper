@@ -213,7 +213,7 @@ export default function TeamDetailPage() {
         <section className="mb-10">
           <h2 className="text-lg font-semibold pb-2 border-b border-border mb-4">Team Roster</h2>
 
-          <form onSubmit={handleAddMember} className="flex gap-2 mb-4">
+          <form onSubmit={handleAddMember} className="flex flex-col sm:flex-row gap-2 mb-4">
             <input
               type="text"
               placeholder="Name"
@@ -226,7 +226,7 @@ export default function TeamDetailPage() {
               placeholder="Role (optional)"
               value={newMemberRole}
               onChange={(e) => setNewMemberRole(e.target.value)}
-              className="w-48 input-field"
+              className="sm:w-48 input-field"
             />
             <Button type="submit" disabled={!newMemberName.trim()}>
               <UserPlus /> Add
@@ -240,7 +240,7 @@ export default function TeamDetailPage() {
               {members.map((member) => (
                 <div
                   key={member._id}
-                  className="flex items-center justify-between rounded-md border border-border p-3 hover:bg-muted transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between rounded-md border border-border p-3 hover:bg-muted transition-colors gap-2"
                 >
                   <div>
                     <span className="font-medium">{member.name}</span>
@@ -278,9 +278,9 @@ export default function TeamDetailPage() {
               {sizes.map((size) => (
                 <div
                   key={size.label}
-                  className="flex items-center justify-between rounded-md border border-border p-3"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between rounded-md border border-border p-3 gap-1 sm:gap-3"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <span className="font-mono font-semibold text-sm w-8">{size.label}</span>
                     <span className="text-sm text-muted-foreground">
                       {size.minPoints}–{size.maxPoints} pts
@@ -485,7 +485,7 @@ export default function TeamDetailPage() {
               {roadmaps.map((roadmap) => (
                 <div
                   key={roadmap._id}
-                  className="flex items-center justify-between rounded-md border border-border p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between rounded-md border border-border p-3 cursor-pointer hover:bg-accent/50 transition-colors gap-1 sm:gap-3"
                   onClick={() => router.push(`/teams/${teamId}/roadmaps/${roadmap._id}`)}
                 >
                   <div>
@@ -499,7 +499,7 @@ export default function TeamDetailPage() {
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground shrink-0">
                     {formatDate(roadmap.startDate)} –{" "}
                     {formatDate(roadmap.endDate)}
                   </span>
