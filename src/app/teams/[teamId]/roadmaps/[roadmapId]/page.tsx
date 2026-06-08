@@ -355,7 +355,7 @@ export default function RoadmapDetailPage() {
 
   return (
     <div className="flex-1 p-6 md:p-10">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" onClick={() => router.push(`/teams/${teamId}`)}>
             <ArrowLeft /> Back
@@ -469,6 +469,7 @@ export default function RoadmapDetailPage() {
               endDate={roadmap.endDate}
               onExpandProject={fetchMilestones}
               highlightedId={hoveredProjectId}
+              labelWidth="w-64"
             />
           </div>
 
