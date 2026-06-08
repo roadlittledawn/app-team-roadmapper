@@ -39,6 +39,7 @@ interface GanttChartProps {
   endDate: string;
   onExpandProject?: (projectId: string) => void;
   highlightedId?: string | null;
+  labelWidth?: string;
 }
 
 function parseLocalDate(dateStr: string): Date {
@@ -133,7 +134,7 @@ function ProjectPopoverContent({ project }: { project: GanttProject }) {
   );
 }
 
-export function GanttChart({ projects, startDate, endDate, onExpandProject, highlightedId }: GanttChartProps) {
+export function GanttChart({ projects, startDate, endDate, onExpandProject, highlightedId, labelWidth = "w-48" }: GanttChartProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const start = parseLocalDate(startDate);
   const end = parseLocalDate(endDate);
@@ -182,14 +183,16 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
   const todayInRange = today >= start && today <= end;
   const todayPos = todayInRange ? getPosition(today) : -1;
 
+  const labelRem = labelWidth === "w-48" ? "12rem" : labelWidth === "w-64" ? "16rem" : labelWidth === "w-72" ? "18rem" : labelWidth === "w-80" ? "20rem" : "12rem";
+
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[600px] relative">
+      <div className="min-w-[600px] relative" style={{ "--gantt-label-w": labelRem } as React.CSSProperties}>
         {/* Today line — single continuous line spanning full chart height */}
         {todayInRange && (
           <div
             className="absolute top-0 bottom-0 w-0.5 bg-primary z-10 pointer-events-none"
-            style={{ left: `calc(12rem + (100% - 12rem) * ${todayPos / 100})` }}
+            style={{ left: `calc(var(--gantt-label-w) + (100% - var(--gantt-label-w)) * ${todayPos / 100})` }}
           >
             <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 bg-primary text-primary-foreground text-[9px] font-medium px-1.5 py-0.5 rounded-sm whitespace-nowrap">
               Today
@@ -198,7 +201,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
         )}
         {/* Header */}
         <div className="flex border-b border-border pb-1 mb-0">
-          <div className="w-48 shrink-0 text-xs font-medium text-muted-foreground">
+          <div className={`${labelWidth} shrink-0 text-xs font-medium text-muted-foreground`}>
             Project
           </div>
           <div className="flex-1 relative">
@@ -285,7 +288,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                 <div className={`flex items-center min-h-10 py-1 transition-colors ${isHighlighted ? "bg-primary/20 ring-1 ring-primary/50 rounded" : ""}`}>
                   <Popover content={popoverContent} delay={600} position="top">
                     <div
-                      className={`w-48 shrink-0 flex items-start gap-0.5 pr-2 text-sm leading-snug ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
+                      className={`${labelWidth} shrink-0 flex items-start gap-0.5 pr-2 text-sm leading-snug ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
                       onClick={() => hasMilestones && toggleExpand(project._id)}
                     >
                       {hasMilestones ? (
@@ -389,7 +392,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
 
                     return (
                       <div key={milestone._id} className="flex items-center min-h-8 py-0.5">
-                        <div className="w-48 shrink-0 text-xs pr-2 pl-6 leading-snug text-muted-foreground">
+                        <div className={`${labelWidth} shrink-0 text-xs pr-2 pl-6 leading-snug text-muted-foreground`}>
                           {milestone.title}
                         </div>
                         <div className="flex-1 relative min-h-6 self-stretch">

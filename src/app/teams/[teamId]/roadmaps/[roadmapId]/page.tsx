@@ -1195,7 +1195,7 @@ function GanttFullscreen({
         </Button>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        <GanttChart projects={projects} startDate={startDate} endDate={endDate} />
+        <GanttChart projects={projects} startDate={startDate} endDate={endDate} labelWidth="w-72" />
       </div>
     </div>
   );
