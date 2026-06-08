@@ -364,8 +364,20 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                   .map((milestone) => {
                     const mStart = parseLocalDate(milestone.plannedStart);
                     const mEnd = parseLocalDate(milestone.plannedEnd);
-                    const mLeft = getPosition(mStart < start ? start : mStart);
-                    const mRight = getPosition(mEnd > end ? end : mEnd);
+
+                    const mStartWeekIdx = weeks.findIndex((w, i) => {
+                      const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+                      return mStart >= w && mStart < nextWeek;
+                    });
+                    const mEndWeekIdx = weeks.findIndex((w, i) => {
+                      const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+                      return mEnd >= w && mEnd < nextWeek;
+                    });
+
+                    const mLeft = mStartWeekIdx >= 0 ? weekPositions[mStartWeekIdx] : getPosition(mStart < start ? start : mStart);
+                    const mRight = mEndWeekIdx >= 0
+                      ? (mEndWeekIdx < weeks.length - 1 ? weekPositions[mEndWeekIdx + 1] : 100)
+                      : getPosition(mEnd > end ? end : mEnd);
                     const mWidth = Math.max(mRight - mLeft, 0.5);
                     const milestoneColor = lightenColor(barColor, 0.25);
 
