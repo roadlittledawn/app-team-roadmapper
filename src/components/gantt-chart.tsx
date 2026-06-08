@@ -179,9 +179,23 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
     : -1;
   const currentWeekWidth = currentWeekRight - currentWeekLeft;
 
+  const todayInRange = today >= start && today <= end;
+  const todayPos = todayInRange ? getPosition(today) : -1;
+
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[600px]">
+      <div className="min-w-[600px] relative">
+        {/* Today line — single continuous line spanning full chart height */}
+        {todayInRange && (
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-primary z-10 pointer-events-none"
+            style={{ left: `calc(12rem + (100% - 12rem) * ${todayPos / 100})` }}
+          >
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 bg-primary text-primary-foreground text-[9px] font-medium px-1.5 py-0.5 rounded-sm whitespace-nowrap">
+              Today
+            </span>
+          </div>
+        )}
         {/* Header */}
         <div className="flex border-b border-border pb-1 mb-0">
           <div className="w-48 shrink-0 text-xs font-medium text-muted-foreground">
@@ -343,14 +357,6 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                         {milestonesAfter} after →
                       </div>
                     )}
-                    {/* Today marker */}
-                    {today >= start && today <= end && (
-                      <div
-                        className="absolute top-0 w-0.5 h-full bg-primary"
-                        style={{ left: `${getPosition(today)}%` }}
-                        title="Today"
-                      />
-                    )}
                   </div>
                 </div>
 
@@ -411,13 +417,6 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                             }}
                             title={`${milestone.title} (${milestone.statusLabel})`}
                           />
-                          {today >= start && today <= end && (
-                            <div
-                              className="absolute top-0 w-0.5 h-full bg-primary"
-                              style={{ left: `${getPosition(today)}%` }}
-                              title="Today"
-                            />
-                          )}
                         </div>
                       </div>
                     );
