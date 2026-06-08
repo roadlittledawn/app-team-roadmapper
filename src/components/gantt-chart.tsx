@@ -188,6 +188,16 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[600px] relative" style={{ "--gantt-label-w": labelRem } as React.CSSProperties}>
+        {/* Current week highlight — single continuous rectangle */}
+        {currentWeekLeft >= 0 && (
+          <div
+            className="absolute top-0 bottom-0 bg-primary/20 pointer-events-none"
+            style={{
+              left: `calc(var(--gantt-label-w) + (100% - var(--gantt-label-w)) * ${currentWeekLeft / 100})`,
+              width: `calc((100% - var(--gantt-label-w)) * ${currentWeekWidth / 100})`,
+            }}
+          />
+        )}
         {/* Today line — single continuous line spanning full chart height */}
         {todayInRange && (
           <div
@@ -205,12 +215,6 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
             Project
           </div>
           <div className="flex-1 relative">
-            {currentWeekLeft >= 0 && (
-              <div
-                className="absolute top-0 h-full bg-primary/10 rounded-sm"
-                style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
-              />
-            )}
             {weeks.map((week, i) => {
               const left = weekPositions[i];
               if (left < 0) return null;
@@ -302,13 +306,6 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                     </div>
                   </Popover>
                   <div className="flex-1 relative min-h-8 self-stretch">
-                    {/* Current week highlight */}
-                    {currentWeekLeft >= 0 && (
-                      <div
-                        className="absolute top-0 h-full bg-primary/10"
-                        style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
-                      />
-                    )}
                     {/* Week grid lines */}
                     {weekPositions.map((pos, i) =>
                       pos >= 0 ? (
@@ -396,12 +393,6 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                           {milestone.title}
                         </div>
                         <div className="flex-1 relative min-h-6 self-stretch">
-                          {currentWeekLeft >= 0 && (
-                            <div
-                              className="absolute top-0 h-full bg-primary/10"
-                              style={{ left: `${currentWeekLeft}%`, width: `${currentWeekWidth}%` }}
-                            />
-                          )}
                           {weekPositions.map((pos, i) =>
                             pos >= 0 ? (
                               <div
