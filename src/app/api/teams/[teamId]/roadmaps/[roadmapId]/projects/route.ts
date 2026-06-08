@@ -29,6 +29,36 @@ export async function GET(
   return NextResponse.json({ projects });
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ teamId: string; roadmapId: string }> }
+) {
+  const session = await requireAuth();
+  const { teamId, roadmapId } = await params;
+  const body = await request.json();
+
+  if (!body.projectId) {
+    return NextResponse.json({ error: "projectId is required" }, { status: 400 });
+  }
+
+  const roadmap = await verifyAccess(teamId, roadmapId, session.userId);
+  if (!roadmap) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const project = await Project.findOne({ _id: body.projectId, teamId });
+  if (!project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  if (!project.roadmapIds.some((id: { toString(): string }) => id.toString() === roadmapId)) {
+    project.roadmapIds.push(roadmapId);
+    await project.save();
+  }
+
+  return NextResponse.json({ project });
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ teamId: string; roadmapId: string }> }

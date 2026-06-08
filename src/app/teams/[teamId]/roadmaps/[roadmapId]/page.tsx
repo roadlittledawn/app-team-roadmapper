@@ -9,7 +9,7 @@ import { CapacityOverview } from "@/components/capacity-overview";
 import { MilestoneManager } from "@/components/milestone-manager";
 import { MarkdownContent } from "@/components/markdown-content";
 import { MarkdownEditor } from "@/components/markdown-editor";
-import { ArrowLeft, Info, Maximize2, Minimize2, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, ExternalLink, Info, Maximize2, Minimize2, Pencil, Plus, X } from "lucide-react";
 
 const PROJECT_PALETTE = [
   "#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981",
@@ -122,6 +122,9 @@ export default function RoadmapDetailPage() {
   const [projectError, setProjectError] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [showSizingRef, setShowSizingRef] = useState(false);
+  const [showAddExisting, setShowAddExisting] = useState(false);
+  const [allTeamProjects, setAllTeamProjects] = useState<{ _id: string; title: string; roadmapIds: string[] }[]>([]);
+  const [addingExisting, setAddingExisting] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -206,6 +209,29 @@ export default function RoadmapDetailPage() {
     } else {
       const data = await res.json();
       setProjectError(data.error || "Failed to create project");
+    }
+  }
+
+  async function openAddExisting() {
+    setShowAddExisting(true);
+    const res = await fetch(`/api/teams/${teamId}/projects`, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      setAllTeamProjects(data.projects);
+    }
+  }
+
+  async function handleAddExistingProject(projectId: string) {
+    setAddingExisting(true);
+    const res = await fetch(`/api/teams/${teamId}/roadmaps/${roadmapId}/projects`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId }),
+    });
+    setAddingExisting(false);
+    if (res.ok) {
+      setShowAddExisting(false);
+      await fetchAll();
     }
   }
 
@@ -371,7 +397,8 @@ export default function RoadmapDetailPage() {
                   type="date"
                   value={rmStart}
                   onChange={(e) => setRmStart(e.target.value)}
-                  className="mt-1 input-field"
+                  onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                  className="mt-1 input-field cursor-pointer"
                 />
               </div>
               <div>
@@ -380,7 +407,8 @@ export default function RoadmapDetailPage() {
                   type="date"
                   value={rmEnd}
                   onChange={(e) => setRmEnd(e.target.value)}
-                  className="mt-1 input-field"
+                  onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                  className="mt-1 input-field cursor-pointer"
                 />
               </div>
             </div>
@@ -472,7 +500,10 @@ export default function RoadmapDetailPage() {
                 )}
               </div>
               {!showProjectForm && (
-                <Button onClick={() => setShowProjectForm(true)}><Plus /> Add Project</Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost-accent" size="sm" onClick={openAddExisting}>Add Existing</Button>
+                  <Button onClick={() => setShowProjectForm(true)}><Plus /> New Project</Button>
+                </div>
               )}
             </div>
 
@@ -500,6 +531,33 @@ export default function RoadmapDetailPage() {
                   </tbody>
                 </table>
               </div>
+            )}
+
+            {showAddExisting && (
+              <Modal open={showAddExisting} onClose={() => setShowAddExisting(false)} title="Add Existing Project">
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {allTeamProjects
+                    .filter((p) => !p.roadmapIds.includes(roadmapId))
+                    .length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      All projects are already on this roadmap.
+                    </p>
+                  ) : (
+                    allTeamProjects
+                      .filter((p) => !p.roadmapIds.includes(roadmapId))
+                      .map((p) => (
+                        <button
+                          key={p._id}
+                          onClick={() => handleAddExistingProject(p._id)}
+                          disabled={addingExisting}
+                          className="w-full text-left px-3 py-2 rounded-md border border-border hover:bg-accent/30 transition-colors text-sm"
+                        >
+                          {p.title}
+                        </button>
+                      ))
+                  )}
+                </div>
+              </Modal>
             )}
 
             {showProjectForm && (
@@ -586,7 +644,8 @@ export default function RoadmapDetailPage() {
                       type="date"
                       value={projectStart}
                       onChange={(e) => setProjectStart(e.target.value)}
-                      className="mt-1 input-field"
+                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                      className="mt-1 input-field cursor-pointer"
                       required
                     />
                   </div>
@@ -596,7 +655,8 @@ export default function RoadmapDetailPage() {
                       type="date"
                       value={projectEnd}
                       onChange={(e) => setProjectEnd(e.target.value)}
-                      className="mt-1 input-field"
+                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                      className="mt-1 input-field cursor-pointer"
                       required
                     />
                   </div>
@@ -804,14 +864,53 @@ function ProjectDetail({
     setLinks(links.filter((_, i) => i !== index));
   }
 
+  const router = useRouter();
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  async function handleRemoveFromRoadmap() {
+    setRemoving(true);
+    const res = await fetch(
+      `/api/teams/${teamId}/roadmaps/${roadmapId}/projects/${project._id}/remove`,
+      { method: "POST" }
+    );
+    setRemoving(false);
+    if (res.ok) {
+      setShowRemoveConfirm(false);
+      await onUpdated();
+    }
+  }
+
   if (!editing) {
     return (
       <div className="border border-t-0 border-border rounded-b-md p-4 space-y-4 bg-accent/10">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-1">
+          <Button variant="ghost" size="sm" onClick={() => router.push(`/teams/${teamId}/projects/${project._id}`)} title="Open standalone project page">
+            <ExternalLink />
+          </Button>
           <Button variant="ghost-accent" size="sm" onClick={() => setEditing(true)}>
             <Pencil /> Edit
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setShowRemoveConfirm(true)} className="text-destructive hover:text-destructive" title="Remove from this roadmap">
+            <X />
+          </Button>
         </div>
+
+        {showRemoveConfirm && (
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
+            <p className="text-sm mb-2">
+              Remove &ldquo;{project.title}&rdquo; from this roadmap? The project and its milestones will be preserved and can be added to another roadmap later.
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleRemoveFromRoadmap} disabled={removing} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {removing ? "Removing..." : "Remove"}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowRemoveConfirm(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
           <div>
@@ -991,7 +1090,8 @@ function ProjectDetail({
             type="date"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            className="mt-1 input-field"
+            onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+            className="mt-1 input-field cursor-pointer"
           />
         </div>
         <div>
@@ -1000,7 +1100,8 @@ function ProjectDetail({
             type="date"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
-            className="mt-1 input-field"
+            onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+            className="mt-1 input-field cursor-pointer"
           />
         </div>
       </div>
@@ -1011,8 +1112,9 @@ function ProjectDetail({
           type="date"
           value={currentEnd}
           onChange={(e) => setCurrentEnd(e.target.value)}
+          onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
           min={end}
-          className="mt-1 input-field"
+          className="mt-1 input-field cursor-pointer"
         />
       </div>
       <div>

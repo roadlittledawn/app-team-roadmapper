@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Pencil, Search } from "lucide-react";
 
 interface ProjectRow {
   _id: string;
@@ -176,12 +176,13 @@ export default function ProjectsPage() {
                 <th className="text-left px-4 py-2 font-medium">Start</th>
                 <th className="text-left px-4 py-2 font-medium">End</th>
                 <th className="text-center px-4 py-2 font-medium">Milestones</th>
+                <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                     {projects.length === 0 ? "No projects yet." : "No projects match your filters."}
                   </td>
                 </tr>
@@ -192,10 +193,7 @@ export default function ProjectsPage() {
                     <tr
                       key={p._id}
                       className="border-t border-border hover:bg-accent/20 cursor-pointer transition-colors"
-                      onClick={() => {
-                        const rid = p.roadmapIds[0];
-                        if (rid) router.push(`/teams/${teamId}/roadmaps/${rid}`);
-                      }}
+                      onClick={() => router.push(`/teams/${teamId}/projects/${p._id}`)}
                     >
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-2">
@@ -229,6 +227,19 @@ export default function ProjectsPage() {
                       </td>
                       <td className="px-4 py-2.5 text-center text-muted-foreground">
                         {p.milestoneCount || "—"}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/teams/${teamId}/projects/${p._id}`);
+                          }}
+                          title="Edit project"
+                        >
+                          <Pencil />
+                        </Button>
                       </td>
                     </tr>
                   );
