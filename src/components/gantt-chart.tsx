@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Popover } from "@/components/ui/popover";
+// import { Popover } from "@/components/ui/popover";
 
 interface GanttProjectLink {
   label: string;
@@ -282,29 +282,25 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
               }
             }
 
-            const popoverContent = <ProjectPopoverContent project={project} />;
-
             const isHighlighted = highlightedId === project._id;
 
             return (
               <div key={project._id}>
                 {/* Project row */}
                 <div className={`flex items-center min-h-10 py-1 transition-colors ${isHighlighted ? "bg-primary/20 ring-1 ring-primary/50 rounded" : ""}`}>
-                  <Popover content={popoverContent} delay={600} position="top">
-                    <div
-                      className={`${labelWidth} shrink-0 flex items-start gap-0.5 pr-2 text-sm leading-snug ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
-                      onClick={() => hasMilestones && toggleExpand(project._id)}
-                    >
-                      {hasMilestones ? (
-                        <span className="w-4 shrink-0 text-xs text-muted-foreground pt-0.5">
-                          {isExpanded ? "▼" : "▶"}
-                        </span>
-                      ) : (
-                        <span className="w-4 shrink-0" />
-                      )}
-                      <span className="min-w-0">{project.title}</span>
-                    </div>
-                  </Popover>
+                  <div
+                    className={`${labelWidth} shrink-0 flex items-start gap-0.5 pr-2 text-sm leading-snug ${hasMilestones ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
+                    onClick={() => hasMilestones && toggleExpand(project._id)}
+                  >
+                    {hasMilestones ? (
+                      <span className="w-4 shrink-0 text-xs text-muted-foreground pt-0.5">
+                        {isExpanded ? "▼" : "▶"}
+                      </span>
+                    ) : (
+                      <span className="w-4 shrink-0" />
+                    )}
+                    <span className="min-w-0">{project.title}</span>
+                  </div>
                   <div className="flex-1 relative min-h-8 self-stretch">
                     {/* Week grid lines */}
                     {weekPositions.map((pos, i) =>
@@ -317,17 +313,15 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                       ) : null
                     )}
                     {/* Planned bar (original commitment) */}
-                    <Popover content={popoverContent} delay={600} position="top">
-                      <div
-                        className={`absolute top-1/2 -translate-y-1/2 h-4 ${hasOverage ? "rounded-l-sm" : "rounded-sm"} ${hasMilestones ? "cursor-pointer" : "cursor-default"}`}
-                        style={{
-                          left: `${barLeft}%`,
-                          width: `${barWidth}%`,
-                          backgroundColor: barColor,
-                        }}
-                        onClick={() => hasMilestones && toggleExpand(project._id)}
-                      />
-                    </Popover>
+                    <div
+                      className={`absolute top-1/2 -translate-y-1/2 h-4 ${hasOverage ? "rounded-l-sm" : "rounded-sm"} ${hasMilestones ? "cursor-pointer" : "cursor-default"}`}
+                      style={{
+                        left: `${barLeft}%`,
+                        width: `${barWidth}%`,
+                        backgroundColor: barColor,
+                      }}
+                      onClick={() => hasMilestones && toggleExpand(project._id)}
+                    />
                     {/* Overage extension (striped) — beyond original planned end */}
                     {hasOverage && overageWidth > 0 && (
                       <div
