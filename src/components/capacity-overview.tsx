@@ -28,6 +28,7 @@ export function CapacityOverview({
   const sizeCounts: Record<string, number> = {};
   const statusCounts: Record<string, { count: number; color: string }> = {};
   let totalEffort = 0;
+  let doneEffort = 0;
 
   for (const project of projects) {
     if (project.size) {
@@ -40,11 +41,15 @@ export function CapacityOverview({
     }
     statusCounts[key].count++;
 
+    let effort = 0;
     if (estimationMode === "points") {
-      totalEffort += project.pointEstimate || 0;
+      effort = project.pointEstimate || 0;
     } else {
-      const weight = sizeWeights.find((sw) => sw.label === project.size)?.weight || 0;
-      totalEffort += weight;
+      effort = sizeWeights.find((sw) => sw.label === project.size)?.weight || 0;
+    }
+    totalEffort += effort;
+    if (project.statusLabel === "Done") {
+      doneEffort += effort;
     }
   }
 
@@ -63,9 +68,9 @@ export function CapacityOverview({
         </div>
         <div>
           <div className="text-2xl font-bold">
-            {totalEffort} <span className="text-sm font-normal text-muted-foreground">{unit}</span>
+            {doneEffort}<span className="text-sm font-normal text-muted-foreground">/{totalEffort} {unit}</span>
           </div>
-          <div className="text-xs text-muted-foreground">Total Effort</div>
+          <div className="text-xs text-muted-foreground">Done / Committed</div>
         </div>
         <div>
           <div className="text-2xl font-bold">
