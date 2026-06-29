@@ -364,6 +364,8 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                   .map((milestone) => {
                     const mStart = parseLocalDate(milestone.plannedStart);
                     const mEnd = parseLocalDate(milestone.plannedEnd);
+                    const milestoneOverdue = milestone.statusLabel !== "Done" && today > mEnd;
+                    const milestoneEffectiveEnd = milestoneOverdue ? today : mEnd;
 
                     const mStartWeekIdx = weeks.findIndex((w, i) => {
                       const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
@@ -373,12 +375,22 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                       const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
                       return mEnd >= w && mEnd < nextWeek;
                     });
+                    const mEffectiveEndWeekIdx = milestoneOverdue ? weeks.findIndex((w, i) => {
+                      const nextWeek = i < weeks.length - 1 ? weeks[i + 1] : end;
+                      return milestoneEffectiveEnd >= w && milestoneEffectiveEnd < nextWeek;
+                    }) : -1;
 
                     const mLeft = mStartWeekIdx >= 0 ? weekPositions[mStartWeekIdx] : getPosition(mStart < start ? start : mStart);
                     const mRight = mEndWeekIdx >= 0
                       ? (mEndWeekIdx < weeks.length - 1 ? weekPositions[mEndWeekIdx + 1] : 100)
                       : getPosition(mEnd > end ? end : mEnd);
+                    const mOverageRight = milestoneOverdue
+                      ? (mEffectiveEndWeekIdx >= 0
+                        ? (mEffectiveEndWeekIdx < weeks.length - 1 ? weekPositions[mEffectiveEndWeekIdx + 1] : 100)
+                        : getPosition(milestoneEffectiveEnd > end ? end : milestoneEffectiveEnd))
+                      : mRight;
                     const mWidth = Math.max(mRight - mLeft, 0.5);
+                    const mOverageWidth = milestoneOverdue ? Math.max(mOverageRight - mRight, 0) : 0;
                     const milestoneColor = lightenColor(barColor, 0.45);
 
                     return (
@@ -397,7 +409,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                             ) : null
                           )}
                           <div
-                            className="absolute top-1/2 -translate-y-1/2 h-3 rounded-sm"
+                            className={`absolute top-1/2 -translate-y-1/2 h-3 ${milestoneOverdue ? "rounded-l-sm" : "rounded-sm"}`}
                             style={{
                               left: `${mLeft}%`,
                               width: `${mWidth}%`,
@@ -405,6 +417,24 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                             }}
                             title={`${milestone.title} (${milestone.statusLabel})`}
                           />
+                          {milestoneOverdue && mOverageWidth > 0 && (
+                            <div
+                              className="absolute top-1/2 -translate-y-1/2 h-3 rounded-r-sm"
+                              style={{
+                                left: `${mRight}%`,
+                                width: `${mOverageWidth}%`,
+                                backgroundImage: `repeating-linear-gradient(
+                                  -45deg,
+                                  ${milestoneColor},
+                                  ${milestoneColor} 2px,
+                                  transparent 2px,
+                                  transparent 6px
+                                )`,
+                                opacity: 0.7,
+                              }}
+                              title={`${milestone.title} — overdue past ${formatDate(milestone.plannedEnd)}`}
+                            />
+                          )}
                         </div>
                       </div>
                     );
