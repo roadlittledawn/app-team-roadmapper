@@ -60,6 +60,8 @@ export async function POST(
     assignee: body.assignee || "",
     plannedStart: new Date(body.plannedStart),
     plannedEnd: new Date(body.plannedEnd),
+    size: body.size || null,
+    pointEstimate: body.pointEstimate != null ? Number(body.pointEstimate) : null,
     order: nextOrder,
   });
 

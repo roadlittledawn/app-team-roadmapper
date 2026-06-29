@@ -12,6 +12,8 @@ interface Milestone {
   assignee: string;
   plannedStart: string;
   plannedEnd: string;
+  size: string | null;
+  pointEstimate: number | null;
   order: number;
 }
 
@@ -26,12 +28,18 @@ interface Member {
   name: string;
 }
 
+interface SizeEntry {
+  label: string;
+}
+
 interface MilestoneManagerProps {
   teamId: string;
   roadmapId: string;
   projectId: string;
   statuses: Status[];
   members: Member[];
+  estimationMode: "points" | "sizes-only";
+  sizes: SizeEntry[];
   onMilestoneChange?: () => void;
 }
 
@@ -46,6 +54,8 @@ export function MilestoneManager({
   projectId,
   statuses,
   members,
+  estimationMode,
+  sizes,
   onMilestoneChange,
 }: MilestoneManagerProps) {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -58,6 +68,8 @@ export function MilestoneManager({
   const [assignee, setAssignee] = useState("");
   const [plannedStart, setPlannedStart] = useState("");
   const [plannedEnd, setPlannedEnd] = useState("");
+  const [size, setSize] = useState("");
+  const [points, setPoints] = useState("");
   const [saving, setSaving] = useState(false);
 
   const baseUrl = `/api/teams/${teamId}/roadmaps/${roadmapId}/projects/${projectId}/milestones`;
@@ -82,6 +94,8 @@ export function MilestoneManager({
     setAssignee("");
     setPlannedStart("");
     setPlannedEnd("");
+    setSize("");
+    setPoints("");
     setEditingId(null);
     setShowForm(false);
   }
@@ -93,6 +107,8 @@ export function MilestoneManager({
     setAssignee(m.assignee || "");
     setPlannedStart(m.plannedStart.split("T")[0]);
     setPlannedEnd(m.plannedEnd.split("T")[0]);
+    setSize(m.size || "");
+    setPoints(m.pointEstimate?.toString() || "");
     setEditingId(m._id);
     setShowForm(true);
   }
@@ -108,6 +124,8 @@ export function MilestoneManager({
       assignee,
       plannedStart,
       plannedEnd,
+      size: size || null,
+      pointEstimate: points ? Number(points) : null,
     };
 
     let res: Response;
@@ -279,6 +297,33 @@ export function MilestoneManager({
                 required
               />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs font-medium">Size</label>
+              <select
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                className="mt-0.5 input-field text-sm"
+              >
+                <option value="">None</option>
+                {sizes.map((s) => (
+                  <option key={s.label} value={s.label}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+            {estimationMode === "points" && (
+              <div>
+                <label className="text-xs font-medium">Points</label>
+                <input
+                  type="number"
+                  value={points}
+                  onChange={(e) => setPoints(e.target.value)}
+                  placeholder="e.g. 3"
+                  className="mt-0.5 input-field text-sm"
+                />
+              </div>
+            )}
           </div>
           <div className="flex gap-2 pt-1">
             <Button type="submit" size="sm" disabled={saving || !title.trim() || !statusId || !plannedStart || !plannedEnd}>

@@ -35,6 +35,8 @@ export async function PUT(
   if (body.assignee !== undefined) update.assignee = body.assignee;
   if (body.plannedStart) update.plannedStart = new Date(body.plannedStart);
   if (body.plannedEnd) update.plannedEnd = new Date(body.plannedEnd);
+  if (body.size !== undefined) update.size = body.size || null;
+  if (body.pointEstimate !== undefined) update.pointEstimate = body.pointEstimate != null ? Number(body.pointEstimate) : null;
 
   const milestone = await Milestone.findOneAndUpdate(
     { _id: milestoneId, projectId },

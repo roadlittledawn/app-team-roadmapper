@@ -363,6 +363,8 @@ export default function ProjectDetailPage() {
                 projectId={project._id}
                 statuses={statuses}
                 members={members}
+                estimationMode="points"
+                sizes={sizingConfig?.sizes.map((s) => ({ label: s.label })) || []}
                 onMilestoneChange={fetchAll}
               />
             </div>

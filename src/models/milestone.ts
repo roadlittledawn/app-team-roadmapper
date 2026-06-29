@@ -8,6 +8,8 @@ export interface IMilestone extends Document {
   assignee: string;
   plannedStart: Date;
   plannedEnd: Date;
+  size: string | null;
+  pointEstimate: number | null;
   order: number;
   createdAt: Date;
   updatedAt: Date;
@@ -22,6 +24,8 @@ const MilestoneSchema = new Schema<IMilestone>(
     assignee: { type: String, default: "" },
     plannedStart: { type: Date, required: true },
     plannedEnd: { type: Date, required: true },
+    size: { type: String, default: null },
+    pointEstimate: { type: Number, default: null },
     order: { type: Number, default: 0 },
   },
   { timestamps: true }

@@ -44,6 +44,8 @@ interface Milestone {
   plannedEnd: string;
   statusId: string;
   assignee: string;
+  size: string | null;
+  pointEstimate: number | null;
 }
 
 interface Project {
@@ -157,6 +159,15 @@ export default function RoadmapDetailPage() {
     }
     setLoading(false);
   }
+
+  useEffect(() => {
+    const projectsWithMilestones = projects.filter(
+      (p) => (p.milestoneCount ?? 0) > 0 && !projectMilestones[p._id]
+    );
+    for (const p of projectsWithMilestones) {
+      fetchMilestones(p._id);
+    }
+  }, [projects]);
 
   function getStatus(statusId: string) {
     return statuses.find((s) => s._id === statusId) || { label: "Unknown", color: "#6b7280" };
@@ -339,14 +350,33 @@ export default function RoadmapDetailPage() {
     };
   });
 
-  const capacityProjects = projects.map((p) => {
+  const capacityProjects = projects.flatMap((p) => {
     const status = getStatus(p.statusId);
-    return {
+    const loadedMilestones = projectMilestones[p._id];
+    const hasMilestones = loadedMilestones && loadedMilestones.length > 0;
+
+    if (hasMilestones) {
+      return loadedMilestones
+        .filter((m) => {
+          return m.plannedEnd >= roadmap.startDate && m.plannedStart <= roadmap.endDate;
+        })
+        .map((m) => {
+          const mStatus = getStatus(m.statusId);
+          return {
+            size: m.size,
+            pointEstimate: m.pointEstimate,
+            statusLabel: mStatus.label,
+            statusColor: mStatus.color,
+          };
+        });
+    }
+
+    return [{
       size: p.size,
       pointEstimate: p.pointEstimate,
       statusLabel: status.label,
       statusColor: status.color,
-    };
+    }];
   });
 
   const selectedProject = selectedProjectId
@@ -983,6 +1013,8 @@ function ProjectDetail({
             projectId={project._id}
             statuses={statuses}
             members={members}
+            estimationMode={estimationMode}
+            sizes={sizingConfig?.sizes.map((s) => ({ label: s.label })) || []}
             onMilestoneChange={onUpdated}
           />
         </div>
