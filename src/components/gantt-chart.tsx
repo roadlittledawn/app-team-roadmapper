@@ -391,7 +391,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                       : mRight;
                     const mWidth = Math.max(mRight - mLeft, 0.5);
                     const mOverageWidth = milestoneOverdue ? Math.max(mOverageRight - mRight, 0) : 0;
-                    const milestoneColor = lightenColor(barColor, 0.45);
+                    const milestoneColor = lightenColor(barColor, 0.65);
 
                     return (
                       <div key={milestone._id} className="flex items-center min-h-8 py-0.5">
@@ -414,6 +414,7 @@ export function GanttChart({ projects, startDate, endDate, onExpandProject, high
                               left: `${mLeft}%`,
                               width: `${mWidth}%`,
                               backgroundColor: milestoneColor,
+                              opacity: 0.6,
                             }}
                             title={`${milestone.title} (${milestone.statusLabel})`}
                           />
